@@ -17,13 +17,14 @@ function HeroCarousel({ page = 'home' }) {
                             pause: 'hover'
                         });
                     }
+                    carousel.cycle();
                 } catch (error) {
                     console.error('Erro ao inicializar carousel:', error);
                 }
             }
         };
 
-        setTimeout(initializeCarousel, 100);
+        initializeCarousel();
     }, []);
 
     const slides = {
@@ -135,7 +136,6 @@ function HeroCarousel({ page = 'home' }) {
             <div
                 id="mainCarousel"
                 className="carousel slide"
-                data-bs-ride="carousel"
                 data-bs-interval="6500"
             >
                 <div className="carousel-inner">
