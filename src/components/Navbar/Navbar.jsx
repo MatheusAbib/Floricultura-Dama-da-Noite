@@ -214,7 +214,11 @@ function Navbar() {
                 {startPage > 1 && (
                     <>
                         <button className="page-btn" onClick={() => goToPage(1)}>1</button>
-                        {startPage > 2 && <span className="page-dots">...</span>}
+                        {startPage > 2 && (
+                            <span className="page-dots">
+                                <i className="bi bi-three-dots" aria-hidden="true" />
+                            </span>
+                        )}
                     </>
                 )}
 
@@ -230,7 +234,11 @@ function Navbar() {
 
                 {endPage < totalPages && (
                     <>
-                        {endPage < totalPages - 1 && <span className="page-dots">...</span>}
+                        {endPage < totalPages - 1 && (
+                            <span className="page-dots">
+                                <i className="bi bi-three-dots" aria-hidden="true" />
+                            </span>
+                        )}
                         <button className="page-btn" onClick={() => goToPage(totalPages)}>{totalPages}</button>
                     </>
                 )}
@@ -404,7 +412,9 @@ function Navbar() {
             {showProfileModal && (
                 <div className="modal-overlay" onClick={() => setShowProfileModal(false)}>
                     <div className="modal-box modal-large" onClick={(e) => e.stopPropagation()}>
-                        <button className="modal-close-x" onClick={() => setShowProfileModal(false)} aria-label="Fechar">✕</button>
+                        <button className="modal-close-x" onClick={() => setShowProfileModal(false)} aria-label="Fechar">
+                            <i className="bi bi-x-lg" aria-hidden="true" />
+                        </button>
                         <h3 className="modal-title">Meu Perfil</h3>
 
                         <div className="row g-3">
@@ -485,7 +495,9 @@ function Navbar() {
             {showFavoritesModal && (
                 <div className="modal-overlay" onClick={() => setShowFavoritesModal(false)}>
                     <div className="modal-box modal-favorites" onClick={(e) => e.stopPropagation()}>
-                        <button className="modal-close-x" onClick={() => setShowFavoritesModal(false)} aria-label="Fechar">✕</button>
+                        <button className="modal-close-x" onClick={() => setShowFavoritesModal(false)} aria-label="Fechar">
+                            <i className="bi bi-x-lg" aria-hidden="true" />
+                        </button>
                         <h3 className="modal-title">Meus Favoritos</h3>
 
                         {favorites.length === 0 ? (
@@ -536,7 +548,9 @@ function Navbar() {
             {showLogoutModal && (
                 <div className="modal-overlay" onClick={() => setShowLogoutModal(false)}>
                     <div className="modal-box modal-small" onClick={(e) => e.stopPropagation()}>
-                        <button className="modal-close-x" onClick={() => setShowLogoutModal(false)} aria-label="Fechar">✕</button>
+                        <button className="modal-close-x" onClick={() => setShowLogoutModal(false)} aria-label="Fechar">
+                            <i className="bi bi-x-lg" aria-hidden="true" />
+                        </button>
                         <div className="modal-confirm">
                             <i className="bi bi-box-arrow-right modal-confirm-icon" aria-hidden="true"></i>
                             <h4 className="modal-title">Deseja sair?</h4>

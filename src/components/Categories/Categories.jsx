@@ -47,7 +47,7 @@ function Categories({ categories }) {
                             </span>
                             <span className="category-name">{category.name}</span>
                             <span className="category-arrow" aria-hidden="true">
-                                ↗
+                                <i className="bi bi-arrow-up-right" />
                             </span>
                         </>
                     );

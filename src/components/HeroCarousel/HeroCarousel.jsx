@@ -173,7 +173,9 @@ function HeroCarousel({ page = 'home' }) {
                                                     className="hero-cta"
                                                     aria-label={slide.buttonLabel}
                                                 >
-                                                    <span className="hero-cta-icon" aria-hidden="true">↗</span>
+                                                    <span className="hero-cta-icon" aria-hidden="true">
+                                                        <i className="bi bi-arrow-up-right" />
+                                                    </span>
                                                     <span className="hero-cta-label">{slide.buttonLabel}</span>
                                                 </a>
                                             ) : (
@@ -182,7 +184,9 @@ function HeroCarousel({ page = 'home' }) {
                                                     className="hero-cta"
                                                     aria-label={slide.buttonLabel}
                                                 >
-                                                    <span className="hero-cta-icon" aria-hidden="true">↗</span>
+                                                    <span className="hero-cta-icon" aria-hidden="true">
+                                                        <i className="bi bi-arrow-up-right" />
+                                                    </span>
                                                     <span className="hero-cta-label">{slide.buttonLabel}</span>
                                                 </Link>
                                             )
@@ -223,7 +227,7 @@ function HeroCarousel({ page = 'home' }) {
                     data-bs-slide="prev"
                     aria-label="Anterior"
                 >
-                    <span aria-hidden="true">←</span>
+                    <i className="bi bi-arrow-left" aria-hidden="true" />
                 </button>
                 <button
                     className="carousel-control-next"
@@ -232,7 +236,7 @@ function HeroCarousel({ page = 'home' }) {
                     data-bs-slide="next"
                     aria-label="Próximo"
                 >
-                    <span aria-hidden="true">→</span>
+                    <i className="bi bi-arrow-right" aria-hidden="true" />
                 </button>
             </div>
         </section>

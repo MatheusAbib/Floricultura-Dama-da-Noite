@@ -120,6 +120,15 @@ body {
     }
 }
 
+.hero-cta-icon,
+.category-arrow,
+.modal-close,
+.modal-close-x,
+.page-dots {
+    font-variant-emoji: text;
+    -webkit-font-feature-settings: "liga" 1;
+}
+
 @media (max-width: 768px) {
     .p-toast {
         width: calc(100vw - 2rem);

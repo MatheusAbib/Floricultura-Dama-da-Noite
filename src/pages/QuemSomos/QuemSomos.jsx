@@ -33,7 +33,7 @@ function QuemSomos() {
                 </FadeIn>
                 <FadeIn direction="down" delay={100}>
                     <h1 className="qs-hero-title">
-                        Sobre a <em className="qs-hand">florcultura.</em>
+                        Sobre a <em className="qs-hand">floricultura.</em>
                     </h1>
                 </FadeIn>
                 <FadeIn direction="up" delay={200}>
@@ -75,7 +75,9 @@ function QuemSomos() {
                         </FadeIn>
                         <FadeIn direction="up" delay={400}>
                             <Link to="/contato" className="qs-cta">
-                                <span className="qs-cta-icon" aria-hidden="true">↗</span>
+                                <span className="qs-cta-icon" aria-hidden="true">
+                                    <i className="bi bi-arrow-up-right" />
+                                </span>
                                 <span className="qs-cta-label">Fale conosco</span>
                             </Link>
                         </FadeIn>
@@ -103,7 +105,7 @@ function QuemSomos() {
                                 <i className="bi bi-geo-alt" aria-hidden="true" />
                                 <div>
                                     <p className="qs-address-line">Rua Jurandyr de Oliveira, 83</p>
-                                    <p className="qs-address-line">Mogi das Cruzes — SP</p>
+                                    <p className="qs-address-line">Mogi das Cruzes - SP</p>
                                     <p className="qs-address-line">CEP 08773-000</p>
                                 </div>
                             </div>

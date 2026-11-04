@@ -49,7 +49,7 @@ function ProductCard({
     const badgeClass = product.badge ? `badge-${product.badge}` : '';
     const badgeLabel = product.badge === 'new' ? 'Novo'
         : product.badge === 'bestseller' ? 'Mais vendido'
-        : product.badge === 'sale' ? 'Promo��o'
+        : product.badge === 'sale' ? 'Promoção'
         : '';
 
     return (

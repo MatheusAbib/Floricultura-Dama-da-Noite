@@ -16,7 +16,7 @@
         display: block;
         width: 100%;
         height: auto;
-        border-radius: $radius-md;
+        border-radius: 8px;
         object-fit: cover;
         transition: transform 1.2s $ease-lux;
     }
@@ -35,7 +35,7 @@
     .products-banner {
         margin: 0rem 0rem 5rem;
         overflow: hidden;
-        border-radius: $radius-lg;
+        border-radius: 8px;
         transition: box-shadow $transition;
     }
 

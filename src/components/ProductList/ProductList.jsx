@@ -112,8 +112,8 @@ function ProductList({
 
     const sortLabel = sortType === 'price-asc' ? 'Menor preço'
         : sortType === 'price-desc' ? 'Maior preço'
-        : sortType === 'name-asc' ? 'Nome (A–Z)'
-        : sortType === 'name-desc' ? 'Nome (Z–A)'
+        : sortType === 'name-asc' ? 'Nome (A-Z)'
+        : sortType === 'name-desc' ? 'Nome (Z-A)'
         : 'Ordenar';
 
     const renderPagination = () => {
@@ -144,7 +144,11 @@ function ProductList({
                 {startPage > 1 && (
                     <>
                         <button className="page-btn" onClick={() => goToPage(1)}>1</button>
-                        {startPage > 2 && <span className="page-dots">…</span>}
+                        {startPage > 2 && (
+                            <span className="page-dots">
+                                <i className="bi bi-three-dots" aria-hidden="true" />
+                            </span>
+                        )}
                     </>
                 )}
 
@@ -160,7 +164,11 @@ function ProductList({
 
                 {endPage < totalPages && (
                     <>
-                        {endPage < totalPages - 1 && <span className="page-dots">…</span>}
+                        {endPage < totalPages - 1 && (
+                            <span className="page-dots">
+                                <i className="bi bi-three-dots" aria-hidden="true" />
+                            </span>
+                        )}
                         <button className="page-btn" onClick={() => goToPage(totalPages)}>{totalPages}</button>
                     </>
                 )}
@@ -255,7 +263,7 @@ function ProductList({
                                     className={`sort-item ${sortType === 'name-asc' ? 'is-active' : ''}`}
                                     onClick={() => handleSort('name-asc')}
                                 >
-                                    Nome (A–Z)
+                                    Nome (A-Z)
                                 </button>
                             </li>
                             <li>
@@ -264,7 +272,7 @@ function ProductList({
                                     className={`sort-item ${sortType === 'name-desc' ? 'is-active' : ''}`}
                                     onClick={() => handleSort('name-desc')}
                                 >
-                                    Nome (Z–A)
+                                    Nome (Z-A)
                                 </button>
                             </li>
                             {sortType && (
@@ -322,7 +330,7 @@ function ProductList({
                 <div className="product-list-footer">
                     {renderPagination()}
                     <p className="product-list-count">
-                        Mostrando <strong>{startIndex + 1}</strong>–<strong>{Math.min(startIndex + itemsPerPage, sorted.length)}</strong> de <strong>{sorted.length}</strong> produtos
+                        Mostrando <strong>{startIndex + 1}</strong>-<strong>{Math.min(startIndex + itemsPerPage, sorted.length)}</strong> de <strong>{sorted.length}</strong> produtos
                     </p>
                 </div>
             )}

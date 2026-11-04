@@ -179,7 +179,9 @@ function Contato() {
 
                             <div className="ct-actions">
                                 <button type="submit" className="ct-btn ct-btn-primary">
-                                    <span className="ct-btn-icon" aria-hidden="true">↗</span>
+                                    <span className="ct-btn-icon" aria-hidden="true">
+                                        <i className="bi bi-arrow-up-right" />
+                                    </span>
                                     Enviar
                                 </button>
                                 <button type="button" className="ct-btn ct-btn-ghost" onClick={handleReset}>
@@ -222,7 +224,7 @@ function Contato() {
                                 <i className="bi bi-geo-alt ct-info-icon" aria-hidden="true" />
                                 <h3 className="ct-info-title">Endereço</h3>
                                 <p className="ct-info-line">Rua Jurandyr de Oliveira, 46</p>
-                                <p className="ct-info-line">Mogi das Cruzes — SP</p>
+                                <p className="ct-info-line">Mogi das Cruzes - SP</p>
                                 <p className="ct-info-line ct-info-line-muted">CEP 08773-000</p>
                             </div>
                     </div>

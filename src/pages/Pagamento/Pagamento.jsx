@@ -359,12 +359,12 @@ function Pagamento() {
 
                                     {!isEditingShipping ? (
                                         <address className="payment-address">
-                                            <strong className="payment-address-name">{customerData.name || '—'}</strong>
-                                            <span className="payment-address-line">{customerData.address || '—'}</span>
+                                            <strong className="payment-address-name">{customerData.name || '-'}</strong>
+                                            <span className="payment-address-line">{customerData.address || '-'}</span>
                                             <span className="payment-address-line">
-                                                {customerData.city || '—'} {customerData.state ? `— ${customerData.state}` : ''}
+                                                {customerData.city || '-'} {customerData.state ? `- ${customerData.state}` : ''}
                                             </span>
-                                            <span className="payment-address-line">CEP {customerData.zip || '—'}</span>
+                                            <span className="payment-address-line">CEP {customerData.zip || '-'}</span>
                                         </address>
                                     ) : (
                                         <div className="payment-shipping-edit">
@@ -486,7 +486,9 @@ function Pagamento() {
             {showErrorModal && (
                 <div className="modal-overlay" onClick={() => setShowErrorModal(false)}>
                     <div className="modal-box modal-small" onClick={(e) => e.stopPropagation()}>
-                        <button className="modal-close-x" onClick={() => setShowErrorModal(false)} aria-label="Fechar">✕</button>
+                        <button className="modal-close-x" onClick={() => setShowErrorModal(false)} aria-label="Fechar">
+                            <i className="bi bi-x-lg" aria-hidden="true" />
+                        </button>
                         <div className="modal-confirm">
                             <i className="bi bi-exclamation-circle modal-confirm-icon" aria-hidden="true" />
                             <h3 className="modal-title">Não foi possível continuar</h3>

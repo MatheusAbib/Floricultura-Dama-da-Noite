@@ -2,7 +2,7 @@
 
 **Dama da Noite**, um e-commerce front-end para floricultura, com loja física em Mogi das Cruzes e entrega na região. O projeto usa React, SCSS e Vite, com foco em experiência editorial e navegação fluida.
 
-> 🔗 **Acesse online:** (https://matheusabib.github.io/Floricultura-Web/)
+> 🔗 **Acesse online:** (https://matheusabib.github.io/Floricultura-Dama-da-Noite/)
 
 ---
 

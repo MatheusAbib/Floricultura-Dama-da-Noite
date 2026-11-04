@@ -174,7 +174,9 @@ function Carrinho() {
                             Adicione produtos para continuar com a compra.
                         </p>
                         <Link to="/" className="cart-btn cart-btn-primary">
-                            <span className="cart-btn-icon" aria-hidden="true">↗</span>
+                            <span className="cart-btn-icon" aria-hidden="true">
+                                <i className="bi bi-arrow-up-right" />
+                            </span>
                             Voltar às compras
                         </Link>
                     </div>
@@ -338,7 +340,7 @@ function Carrinho() {
                             <div className="cart-summary-row">
                                 <span>Desconto</span>
                                 <span className="cart-summary-discount">
-                                    {totals.discount > 0 ? `- ${formatCurrency(totals.discount)}` : '—'}
+                                    {totals.discount > 0 ? `- ${formatCurrency(totals.discount)}` : '-'}
                                 </span>
                             </div>
                             <div className="cart-summary-row cart-summary-total">
@@ -462,7 +464,9 @@ function Carrinho() {
             {showRemoveModal && (
                 <div className="modal-overlay" onClick={() => setShowRemoveModal(false)}>
                     <div className="modal-box modal-small" onClick={(e) => e.stopPropagation()}>
-                        <button className="modal-close-x" onClick={() => setShowRemoveModal(false)} aria-label="Fechar">✕</button>
+                        <button className="modal-close-x" onClick={() => setShowRemoveModal(false)} aria-label="Fechar">
+                            <i className="bi bi-x-lg" aria-hidden="true" />
+                        </button>
                         <div className="modal-confirm">
                             <i className="bi bi-exclamation-circle modal-confirm-icon" aria-hidden="true" />
                             <h3 className="modal-title">Remover item do carrinho?</h3>
@@ -485,7 +489,9 @@ function Carrinho() {
             {showClearModal && (
                 <div className="modal-overlay" onClick={() => setShowClearModal(false)}>
                     <div className="modal-box modal-small" onClick={(e) => e.stopPropagation()}>
-                        <button className="modal-close-x" onClick={() => setShowClearModal(false)} aria-label="Fechar">✕</button>
+                        <button className="modal-close-x" onClick={() => setShowClearModal(false)} aria-label="Fechar">
+                            <i className="bi bi-x-lg" aria-hidden="true" />
+                        </button>
                         <div className="modal-confirm">
                             <i className="bi bi-exclamation-circle modal-confirm-icon" aria-hidden="true" />
                             <h3 className="modal-title">Limpar carrinho?</h3>
