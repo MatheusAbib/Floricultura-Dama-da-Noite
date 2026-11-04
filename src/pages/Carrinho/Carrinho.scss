@@ -771,6 +771,8 @@
 
     .cart-steps {
         gap: 1rem;
+            flex-direction: column;
+            align-items: normal;
     }
 
     .cart-step-label {

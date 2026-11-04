@@ -38,10 +38,9 @@ function Footer() {
     return (
         <footer className="footer">
             <div className="footer-signature">
-                <i className="bi bi-flower1 footer-symbol" aria-hidden="true"></i>
 
                 <h2 className="footer-title">
-                    Dama da <span>Noite.</span>
+                    Dama da Noite.
                 </h2>
 
                 <div className="footer-caption">
@@ -66,7 +65,7 @@ function Footer() {
                 </div>
 
                 <span className="footer-copyright">
-                    © {currentYear} Floricultura Dama da Noite
+                    © {currentYear} Dama da Noite — Floricultura
                 </span>
             </div>
         </footer>

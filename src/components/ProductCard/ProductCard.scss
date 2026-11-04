@@ -9,11 +9,6 @@
     border: 1px solid $overlay-dark-soft;
     border-radius: $radius-md;
     transition: border-color $transition, transform $transition;
-
-    &:hover {
-        border-color: $terracotta;
-        transform: translateY(-2px);
-    }
 }
 
 .product-card-media {
