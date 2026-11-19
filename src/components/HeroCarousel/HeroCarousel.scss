@@ -3,7 +3,8 @@
 
 .hero-carousel.hero-campaign {
     --hero-curve: 90px;
-    --hero-height: 650px;
+    --hero-height: 100vh;
+    --hero-height: 83dvh;
 
     position: relative;
     z-index: 2;
@@ -90,7 +91,7 @@
         align-items: center;
         justify-content: flex-start;
         width: 100%;
-        max-width: 1600px;
+        max-width: 1800px;
         height: var(--hero-height);
         margin: 0 auto;
         padding: 6.5rem clamp(1.5rem, 6vw, 7rem) 6rem;
@@ -163,13 +164,11 @@
         }
 
         em {
-            margin-top: 0.15rem;
             color: $accent-color;
             font-family: $script;
-            font-size: 0.98em;
+            font-size: 0.9em;
             font-style: normal;
             font-weight: 700;
-            line-height: 1.1;
             letter-spacing: -0.035em;
         }
     }
@@ -332,7 +331,7 @@
         position: absolute;
         z-index: 10;
         right: 50%;
-        bottom: calc(var(--hero-curve) - 70px);
+        bottom: calc(var(--hero-curve) - 50px);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -427,7 +426,6 @@
 
 @media (min-width: 1600px) {
     .hero-carousel.hero-campaign {
-        --hero-height: 720px;
 
         .hero-content {
             width: 580px;
@@ -437,7 +435,6 @@
 
 @media (max-width: 1200px) {
     .hero-carousel.hero-campaign {
-        --hero-height: 610px;
 
         .hero-content {
             width: min(100%, 500px);
@@ -455,7 +452,6 @@
 
 @media (max-width: 992px) {
     .hero-carousel.hero-campaign {
-        --hero-height: 570px;
 
         .hero-campaign-inner {
             padding: 3rem 2rem 5rem;

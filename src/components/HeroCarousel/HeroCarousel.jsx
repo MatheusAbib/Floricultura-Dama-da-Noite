@@ -78,7 +78,7 @@ const slides = {
             description: 'Encontre arranjos e buquês para aniversários, comemorações ou para surpreender alguém.',
             buttonLabel: 'Escolher presente',
             buttonLink: '#product-grid',
-            image: `${BASE}Presente-flores.jpg`,
+            image: `${BASE}buque.jpg`,
             imageAlt: 'Presente com flores',
             theme: 'gifts',
             category: 'Buquês & presentes'
