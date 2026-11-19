@@ -93,7 +93,7 @@
         max-width: 1600px;
         height: var(--hero-height);
         margin: 0 auto;
-        padding: 4.5rem clamp(1.5rem, 6vw, 7rem) 6rem;
+        padding: 6.5rem clamp(1.5rem, 6vw, 7rem) 6rem;
     }
 
     .hero-content {
@@ -573,7 +573,7 @@
         --hero-height: 600px;
 
         .hero-campaign-inner {
-            padding: 1rem 1rem 6rem;
+            padding: 1rem 0.5rem 7rem;
         }
 
         .hero-content-inner {
