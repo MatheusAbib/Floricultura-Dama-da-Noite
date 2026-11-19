@@ -1,14 +1,51 @@
+
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useFavorites } from '../../context/FavoritesContext';
 import { formatCurrency } from '../../utils/formatCurrency';
 import ProductModal from '../ProductModal/ProductModal';
 import './Navbar.scss';
 
+const initialUserData = {
+    nome: 'Maria José',
+    email: 'usuario@email.com',
+    telefone: '(11) 99999-9999',
+    cpf: '123.456.789-00',
+    endereco: 'Rua das Flores, 123',
+    cidade: 'São Paulo',
+    estado: 'SP',
+    cep: '01234-567',
+    senha: '********',
+    confirmarsenha: '',
+    cartao: '**** **** **** 1234',
+    bandeira: 'Visa',
+    validade: '12/26',
+    cvv: ''
+};
+
+const productLinks = [
+    { label: 'Plantas', path: '/', icon: 'bi-flower1' },
+    { label: 'Presentes', path: '/presentes', icon: 'bi-gift' },
+    { label: 'Vasos', path: '/vasos', icon: 'bi-basket2' },
+    { label: 'Sementes', path: '/sementes', icon: 'bi-flower2' }
+];
 function Navbar() {
-    const { cartCount, addToCart, addMultipleToCart, showNotification } = useCart();
-    const { favorites, favoritesCount, toggleFavorite } = useFavorites();
+    const location = useLocation();
+
+    const {
+        cartCount,
+        addToCart,
+        addMultipleToCart,
+        showNotification
+    } = useCart();
+
+    const {
+        favorites,
+        favoritesCount,
+        toggleFavorite
+    } = useFavorites();
+
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [showProfileModal, setShowProfileModal] = useState(false);
@@ -19,96 +56,146 @@ function Navbar() {
     const [currentPage, setCurrentPage] = useState(1);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
-    const itemsPerPage = 7;
+
+    const [userData, setUserData] = useState(() => {
+        try {
+            const saved = localStorage.getItem('userProfile');
+
+            if (saved) {
+                return {
+                    ...initialUserData,
+                    ...JSON.parse(saved),
+                    cvv: ''
+                };
+            }
+        } catch {
+            return initialUserData;
+        }
+
+        return initialUserData;
+    });
+
+    const [editData, setEditData] = useState({ ...userData });
+
     const dropdownTimeout = useRef(null);
     const profileTimeout = useRef(null);
-    const [userData, setUserData] = useState({
-        nome: 'Maria José',
-        email: 'usuario@email.com',
-        telefone: '(11) 99999-9999',
-        cpf: '123.456.789-00',
-        endereco: 'Rua das Flores, 123',
-        cidade: 'São Paulo',
-        estado: 'SP',
-        cep: '01234-567',
-        senha: '********',
-        confirmarsenha: '',
-        cartao: '**** **** **** 1234',
-        bandeira: 'Visa',
-        validade: '12/26',
-        cvv: '***'
-    });
-    const [editData, setEditData] = useState({ ...userData });
+    const favoritesModalRef = useRef(null);
+    const profileModalRef = useRef(null);
+    const logoutModalRef = useRef(null);
+
+    const itemsPerPage = 7;
+
+    const totalPages = Math.ceil(favorites.length / itemsPerPage);
+    const safeCurrentPage = Math.max(1, Math.min(currentPage, totalPages || 1));
+    const startIndex = (safeCurrentPage - 1) * itemsPerPage;
+    const currentFavorites = favorites.slice(startIndex, startIndex + itemsPerPage);
+
+    const hasOpenModal =
+        showProfileModal ||
+        showFavoritesModal ||
+        showLogoutModal ||
+        isProductModalOpen;
+
+    const isProductRoute = productLinks.some(
+        item => item.path !== '/' && location.pathname === item.path
+    );
 
     useEffect(() => {
         const mq = window.matchMedia('(max-width: 900px)');
-        const handleChange = (e) => {
-            setIsMobile(e.matches);
-            if (!e.matches) {
+
+        const handleChange = event => {
+            setIsMobile(event.matches);
+
+            if (!event.matches) {
                 setIsMobileMenuOpen(false);
                 setIsDropdownOpen(false);
                 setIsProfileOpen(false);
             }
         };
+
         setIsMobile(mq.matches);
         mq.addEventListener('change', handleChange);
+
         return () => mq.removeEventListener('change', handleChange);
     }, []);
 
-    const toggleMobileMenu = () => setIsMobileMenuOpen(v => !v);
-    const closeMobileMenu = () => setIsMobileMenuOpen(false);
+    useEffect(() => {
+        return () => {
+            if (dropdownTimeout.current) {
+                clearTimeout(dropdownTimeout.current);
+            }
 
-    const openDropdown = () => {
-        if (isMobile) return;
-        if (dropdownTimeout.current) {
-            clearTimeout(dropdownTimeout.current);
-            dropdownTimeout.current = null;
+            if (profileTimeout.current) {
+                clearTimeout(profileTimeout.current);
+            }
+        };
+    }, []);
+
+    useEffect(() => {
+        setIsMobileMenuOpen(false);
+        setIsDropdownOpen(false);
+        setIsProfileOpen(false);
+    }, [location.pathname]);
+
+    useEffect(() => {
+        if (currentPage > Math.max(totalPages, 1)) {
+            setCurrentPage(Math.max(totalPages, 1));
         }
-        setIsDropdownOpen(true);
-    };
+    }, [currentPage, totalPages]);
 
-    const scheduleCloseDropdown = () => {
-        if (isMobile) return;
-        if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current);
-        dropdownTimeout.current = setTimeout(() => {
-            setIsDropdownOpen(false);
-            dropdownTimeout.current = null;
-        }, 180);
-    };
+    useEffect(() => {
+        if (!hasOpenModal && !isMobileMenuOpen) {
+            return;
+        }
+
+        const handleEscape = event => {
+            if (event.key !== 'Escape') {
+                return;
+            }
+
+            if (isProductModalOpen) {
+                setIsProductModalOpen(false);
+                setSelectedProduct(null);
+                return;
+            }
+
+            if (showLogoutModal) {
+                setShowLogoutModal(false);
+                return;
+            }
+
+            if (showProfileModal) {
+                setShowProfileModal(false);
+                return;
+            }
+
+            if (showFavoritesModal) {
+                setShowFavoritesModal(false);
+                return;
+            }
+
+            setIsMobileMenuOpen(false);
+        };
+
+        window.addEventListener('keydown', handleEscape);
+
+        return () => window.removeEventListener('keydown', handleEscape);
+    }, [
+        hasOpenModal,
+        isMobileMenuOpen,
+        isProductModalOpen,
+        showLogoutModal,
+        showProfileModal,
+        showFavoritesModal
+    ]);
 
     const closeDropdown = () => {
         if (dropdownTimeout.current) {
             clearTimeout(dropdownTimeout.current);
             dropdownTimeout.current = null;
         }
+
         setIsDropdownOpen(false);
-    };
-
-    const toggleDropdown = (e) => {
-        e.preventDefault();
-        if (dropdownTimeout.current) {
-            clearTimeout(dropdownTimeout.current);
-            dropdownTimeout.current = null;
-        }
-        setIsDropdownOpen(v => !v);
-    };
-
-    const openProfile = () => {
-        if (isMobile) return;
-        if (profileTimeout.current) {
-            clearTimeout(profileTimeout.current);
-            profileTimeout.current = null;
-        }
-        setIsProfileOpen(true);
-    };
-
-    const scheduleCloseProfile = () => {
-        if (isMobile) return;
-        if (profileTimeout.current) clearTimeout(profileTimeout.current);
-        profileTimeout.current = setTimeout(() => {
-            setIsProfileOpen(false);
-            profileTimeout.current = null;
-        }, 180);
     };
 
     const closeProfile = () => {
@@ -116,7 +203,86 @@ function Navbar() {
             clearTimeout(profileTimeout.current);
             profileTimeout.current = null;
         }
+
         setIsProfileOpen(false);
+    };
+
+    const closeMobileMenu = () => {
+        setIsMobileMenuOpen(false);
+    };
+
+    const closeAll = () => {
+        closeMobileMenu();
+        closeDropdown();
+        closeProfile();
+    };
+
+    const toggleMobileMenu = () => {
+        closeDropdown();
+        closeProfile();
+        setIsMobileMenuOpen(previous => !previous);
+    };
+
+    const openDropdown = () => {
+        if (isMobile) return;
+
+        if (dropdownTimeout.current) {
+            clearTimeout(dropdownTimeout.current);
+            dropdownTimeout.current = null;
+        }
+
+        closeProfile();
+        setIsDropdownOpen(true);
+    };
+
+    const scheduleCloseDropdown = () => {
+        if (isMobile) return;
+
+        if (dropdownTimeout.current) {
+            clearTimeout(dropdownTimeout.current);
+        }
+
+        dropdownTimeout.current = setTimeout(() => {
+            setIsDropdownOpen(false);
+            dropdownTimeout.current = null;
+        }, 180);
+    };
+
+    const toggleDropdown = event => {
+        event.preventDefault();
+
+        if (dropdownTimeout.current) {
+            clearTimeout(dropdownTimeout.current);
+            dropdownTimeout.current = null;
+        }
+
+        closeProfile();
+        setIsDropdownOpen(previous => !previous);
+    };
+
+    const openProfile = () => {
+        if (isMobile) return;
+
+        if (profileTimeout.current) {
+            clearTimeout(profileTimeout.current);
+            profileTimeout.current = null;
+        }
+
+        closeDropdown();
+        setIsProfileOpen(true);
+    };
+
+    const scheduleCloseProfile = () => {
+        if (isMobile) return;
+
+        if (profileTimeout.current) {
+            clearTimeout(profileTimeout.current);
+        }
+
+        profileTimeout.current = setTimeout(() => {
+            setIsProfileOpen(false);
+            profileTimeout.current = null;
+        }, 180);
     };
 
     const toggleProfile = () => {
@@ -124,43 +290,55 @@ function Navbar() {
             clearTimeout(profileTimeout.current);
             profileTimeout.current = null;
         }
-        setIsProfileOpen(v => !v);
+
+        closeDropdown();
+        setIsProfileOpen(previous => !previous);
     };
 
     const handleEditClick = () => {
-        setEditData({ ...userData });
+        setEditData({ ...userData, cvv: '' });
         setShowProfileModal(true);
-        setIsProfileOpen(false);
-        closeMobileMenu();
+        closeAll();
     };
 
     const handleSaveProfile = () => {
-        setUserData({ ...editData });
-        localStorage.setItem('userProfile', JSON.stringify(editData));
+        const updatedData = {
+            ...editData,
+            cvv: ''
+        };
+
+        setUserData(updatedData);
+
+        localStorage.setItem(
+            'userProfile',
+            JSON.stringify(updatedData)
+        );
+
         setShowProfileModal(false);
         showNotification('Perfil atualizado com sucesso!', 'success');
     };
 
     const handleLogout = () => {
         setShowLogoutModal(false);
+        closeAll();
         showNotification('Você saiu da sua conta.', 'info');
-        closeMobileMenu();
     };
 
     const handleFavorites = () => {
         setCurrentPage(1);
         setShowFavoritesModal(true);
-        closeMobileMenu();
+        closeAll();
     };
 
-    const handleRemoveFavorite = (productId, productName) => {
-        const product = favorites.find(f => f.id === productId);
-        if (product) {
-            toggleFavorite(product);
-        }
+    const handleRemoveFavorite = productId => {
+        const product = favorites.find(item => item.id === productId);
+
+        if (!product) return;
+
+        toggleFavorite(product);
     };
 
-    const openProductModal = (product) => {
+    const openProductModal = product => {
         setSelectedProduct(product);
         setIsProductModalOpen(true);
     };
@@ -170,19 +348,13 @@ function Navbar() {
         setSelectedProduct(null);
     };
 
-    const closeAll = () => {
-        closeMobileMenu();
-        closeDropdown();
-        closeProfile();
-    };
-
-    const totalPages = Math.ceil(favorites.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const currentFavorites = favorites.slice(startIndex, startIndex + itemsPerPage);
-
-    const goToPage = (page) => {
+    const goToPage = page => {
         if (page >= 1 && page <= totalPages) {
             setCurrentPage(page);
+            favoritesModalRef.current?.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         }
     };
 
@@ -190,33 +362,59 @@ function Navbar() {
         if (totalPages <= 1) return null;
 
         const maxVisiblePages = 5;
-        let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+        let startPage = Math.max(
+            1,
+            safeCurrentPage - Math.floor(maxVisiblePages / 2)
+        );
+
+        let endPage = Math.min(
+            totalPages,
+            startPage + maxVisiblePages - 1
+        );
 
         if (endPage - startPage + 1 < maxVisiblePages) {
-            startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            startPage = Math.max(
+                1,
+                endPage - maxVisiblePages + 1
+            );
         }
 
         const pages = [];
-        for (let i = startPage; i <= endPage; i++) pages.push(i);
+
+        for (let page = startPage; page <= endPage; page++) {
+            pages.push(page);
+        }
 
         return (
-            <div className="pagination-container favorites-pagination">
+            <nav
+                className="favorites-pagination"
+                aria-label="Paginação dos favoritos"
+            >
                 <button
-                    className={`page-btn ${currentPage === 1 ? 'disabled' : ''}`}
-                    onClick={() => goToPage(currentPage - 1)}
-                    disabled={currentPage === 1}
+                    type="button"
+                    className={`page-btn ${safeCurrentPage === 1 ? 'disabled' : ''}`}
+                    onClick={() => goToPage(safeCurrentPage - 1)}
+                    disabled={safeCurrentPage === 1}
                     aria-label="Página anterior"
                 >
-                    <i className="bi bi-chevron-left"></i>
+                    <i className="bi bi-chevron-left" aria-hidden="true" />
                 </button>
 
                 {startPage > 1 && (
                     <>
-                        <button className="page-btn" onClick={() => goToPage(1)}>1</button>
+                        <button
+                            type="button"
+                            className="page-btn"
+                            onClick={() => goToPage(1)}
+                            aria-label="Ir para a página 1"
+                        >
+                            1
+                        </button>
+
                         {startPage > 2 && (
-                            <span className="page-dots">
-                                <i className="bi bi-three-dots" aria-hidden="true" />
+                            <span className="page-dots" aria-hidden="true">
+                                <i className="bi bi-three-dots" />
                             </span>
                         )}
                     </>
@@ -225,8 +423,11 @@ function Navbar() {
                 {pages.map(page => (
                     <button
                         key={page}
-                        className={`page-btn ${currentPage === page ? 'active' : ''}`}
+                        type="button"
+                        className={`page-btn ${safeCurrentPage === page ? 'active' : ''}`}
                         onClick={() => goToPage(page)}
+                        aria-label={`Ir para a página ${page}`}
+                        aria-current={safeCurrentPage === page ? 'page' : undefined}
                     >
                         {page}
                     </button>
@@ -235,23 +436,32 @@ function Navbar() {
                 {endPage < totalPages && (
                     <>
                         {endPage < totalPages - 1 && (
-                            <span className="page-dots">
-                                <i className="bi bi-three-dots" aria-hidden="true" />
+                            <span className="page-dots" aria-hidden="true">
+                                <i className="bi bi-three-dots" />
                             </span>
                         )}
-                        <button className="page-btn" onClick={() => goToPage(totalPages)}>{totalPages}</button>
+
+                        <button
+                            type="button"
+                            className="page-btn"
+                            onClick={() => goToPage(totalPages)}
+                            aria-label={`Ir para a página ${totalPages}`}
+                        >
+                            {totalPages}
+                        </button>
                     </>
                 )}
 
                 <button
-                    className={`page-btn ${currentPage === totalPages ? 'disabled' : ''}`}
-                    onClick={() => goToPage(currentPage + 1)}
-                    disabled={currentPage === totalPages}
+                    type="button"
+                    className={`page-btn ${safeCurrentPage === totalPages ? 'disabled' : ''}`}
+                    onClick={() => goToPage(safeCurrentPage + 1)}
+                    disabled={safeCurrentPage === totalPages}
                     aria-label="Próxima página"
                 >
-                    <i className="bi bi-chevron-right"></i>
+                    <i className="bi bi-chevron-right" aria-hidden="true" />
                 </button>
-            </div>
+            </nav>
         );
     };
 
@@ -263,14 +473,27 @@ function Navbar() {
                     onClick={closeMobileMenu}
                     aria-hidden="true"
                 />
+
                 <div className="site-header-inner">
-                    <Link className="site-brand" to="/" onClick={closeAll}>
-                        <i className="bi bi-flower1 site-brand-symbol" aria-hidden="true" />
+                    <Link
+                        className="site-brand"
+                        to="/"
+                        onClick={closeAll}
+                        aria-label="Dama da Noite - Página inicial"
+                    >
+                        <i
+                            className="bi bi-flower1 site-brand-symbol"
+                            aria-hidden="true"
+                        />
+
                         <span className="site-brand-text">
                             <span className="site-brand-title">
                                 Dama da <span className="site-brand-dot">Noite.</span>
                             </span>
-                            <span className="site-brand-caption">Floricultura</span>
+
+                            <span className="site-brand-caption">
+                                Floricultura
+                            </span>
                         </span>
                     </Link>
 
@@ -279,67 +502,90 @@ function Navbar() {
                         type="button"
                         onClick={toggleMobileMenu}
                         aria-expanded={isMobileMenuOpen}
-                        aria-label="Abrir menu"
+                        aria-label={isMobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
+                        aria-controls="site-main-nav"
                     >
                         <span aria-hidden="true" />
                         <span aria-hidden="true" />
                     </button>
 
-                    <nav className={`site-nav ${isMobileMenuOpen ? 'is-open' : ''}`} aria-label="Navegação principal">
+                    <nav
+                        id="site-main-nav"
+                        className={`site-nav ${isMobileMenuOpen ? 'is-open' : ''}`}
+                        aria-label="Navegação principal"
+                    >
                         <ul className="site-nav-list">
                             <li className="site-nav-item">
-                                <NavLink className="site-nav-link" to="/" onClick={closeAll} end>
+                                <NavLink
+                                    className="site-nav-link"
+                                    to="/"
+                                    onClick={closeAll}
+                                    end
+                                >
                                     Principal
                                 </NavLink>
                             </li>
+
                             <li
                                 className={`site-nav-item site-nav-has-menu ${isDropdownOpen ? 'is-open' : ''}`}
                                 onMouseEnter={openDropdown}
                                 onMouseLeave={scheduleCloseDropdown}
                             >
                                 <button
-                                    className="site-nav-link site-nav-trigger"
+                                    className={`site-nav-link site-nav-trigger ${isProductRoute ? 'active' : ''}`}
                                     type="button"
                                     onClick={toggleDropdown}
                                     aria-expanded={isDropdownOpen}
+                                    aria-controls="site-products-menu"
                                 >
                                     Produtos
-                                    <i className={`bi bi-chevron-down site-nav-caret ${isDropdownOpen ? 'is-open' : ''}`} aria-hidden="true" />
+
+                                    <i
+                                        className={`bi bi-chevron-down site-nav-caret ${isDropdownOpen ? 'is-open' : ''}`}
+                                        aria-hidden="true"
+                                    />
                                 </button>
+
                                 <ul
+                                    id="site-products-menu"
                                     className={`site-submenu ${isDropdownOpen ? 'is-open' : ''}`}
                                     onMouseEnter={openDropdown}
                                     onMouseLeave={scheduleCloseDropdown}
                                 >
-                                    <li>
-                                        <Link className="site-submenu-link" to="./" onClick={closeAll}>
-                                            Plantas
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link className="site-submenu-link" to="/presentes" onClick={closeAll}>
-                                            Presentes
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link className="site-submenu-link" to="/vasos" onClick={closeAll}>
-                                            Vasos
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link className="site-submenu-link" to="/sementes" onClick={closeAll}>
-                                            Sementes
-                                        </Link>
-                                    </li>
+                                    {productLinks.map(item => (
+                                        <li key={item.label}>
+                                            <Link
+                                                className="site-submenu-link"
+                                                to={item.path}
+                                                onClick={closeAll}
+                                            >
+                                                <i
+                                                    className={`bi ${item.icon}`}
+                                                    aria-hidden="true"
+                                                />
+                                                <span>{item.label}</span>
+                                            </Link>
+                                        </li>
+                                    ))}
                                 </ul>
                             </li>
+
                             <li className="site-nav-item">
-                                <NavLink className="site-nav-link" to="/contato" onClick={closeAll}>
+                                <NavLink
+                                    className="site-nav-link"
+                                    to="/contato"
+                                    onClick={closeAll}
+                                >
                                     Fale Conosco
                                 </NavLink>
                             </li>
+
                             <li className="site-nav-item">
-                                <NavLink className="site-nav-link" to="/quem-somos" onClick={closeAll}>
+                                <NavLink
+                                    className="site-nav-link"
+                                    to="/quem-somos"
+                                    onClick={closeAll}
+                                >
                                     Quem Somos
                                 </NavLink>
                             </li>
@@ -350,11 +596,18 @@ function Navbar() {
                                 className="site-action"
                                 type="button"
                                 onClick={handleFavorites}
-                                aria-label="Favoritos"
+                                aria-label={`Meus favoritos, ${favoritesCount} produtos`}
+                                title="Meus favoritos"
                             >
-                                <i className="bi bi-heart" aria-hidden="true" />
+                                <i
+                                    className="bi bi-heart"
+                                    aria-hidden="true"
+                                />
+
                                 {favoritesCount > 0 && (
-                                    <span className="site-action-badge">{favoritesCount}</span>
+                                    <span className="site-action-badge">
+                                        {favoritesCount}
+                                    </span>
                                 )}
                             </button>
 
@@ -362,11 +615,18 @@ function Navbar() {
                                 to="/carrinho"
                                 className="site-action"
                                 onClick={closeAll}
-                                aria-label="Carrinho"
+                                aria-label={`Carrinho, ${cartCount} produtos`}
+                                title="Meu carrinho"
                             >
-                                <i className="bi bi-cart3" aria-hidden="true" />
+                                <i
+                                    className="bi bi-cart3"
+                                    aria-hidden="true"
+                                />
+
                                 {cartCount > 0 && (
-                                    <span className="site-action-badge">{cartCount}</span>
+                                    <span className="site-action-badge">
+                                        {cartCount}
+                                    </span>
                                 )}
                             </Link>
 
@@ -379,27 +639,51 @@ function Navbar() {
                                     className="site-action"
                                     type="button"
                                     onClick={toggleProfile}
-                                    aria-label="Perfil"
+                                    aria-label="Minha conta"
                                     aria-expanded={isProfileOpen}
+                                    aria-controls="site-profile-menu"
+                                    title="Minha conta"
                                 >
-                                    <i className="bi bi-person-circle" aria-hidden="true" />
+                                    <i
+                                        className="bi bi-person-circle"
+                                        aria-hidden="true"
+                                    />
                                 </button>
+
                                 <ul
+                                    id="site-profile-menu"
                                     className={`site-submenu site-submenu-profile ${isProfileOpen ? 'is-open' : ''}`}
                                     onMouseEnter={openProfile}
                                     onMouseLeave={scheduleCloseProfile}
                                 >
                                     <li>
-                                        <button className="site-submenu-link" onClick={handleEditClick}>
-                                            Meu Perfil
+                                        <button
+                                            type="button"
+                                            className="site-submenu-link"
+                                            onClick={handleEditClick}
+                                        >
+                                            <i
+                                                className="bi bi-person-vcard"
+                                                aria-hidden="true"
+                                            />
+                                            <span>Meu Perfil</span>
                                         </button>
                                     </li>
+
                                     <li>
                                         <button
+                                            type="button"
                                             className="site-submenu-link is-danger"
-                                            onClick={() => setShowLogoutModal(true)}
+                                            onClick={() => {
+                                                closeAll();
+                                                setShowLogoutModal(true);
+                                            }}
                                         >
-                                            Sair
+                                            <i
+                                                className="bi bi-box-arrow-right"
+                                                aria-hidden="true"
+                                            />
+                                            <span>Sair</span>
                                         </button>
                                     </li>
                                 </ul>
@@ -410,127 +694,484 @@ function Navbar() {
             </header>
 
             {showProfileModal && (
-                <div className="modal-overlay" onClick={() => setShowProfileModal(false)}>
-                    <div className="modal-box modal-large" onClick={(e) => e.stopPropagation()}>
-                        <button className="modal-close-x" onClick={() => setShowProfileModal(false)} aria-label="Fechar">
+                <div
+                    className="modal-overlay"
+                    onClick={() => setShowProfileModal(false)}
+                >
+                    <div
+                        ref={profileModalRef}
+                        className="modal-box modal-large modal-profile"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="profile-modal-title"
+                        onClick={event => event.stopPropagation()}
+                    >
+                        <button
+                            type="button"
+                            className="modal-close-x"
+                            onClick={() => setShowProfileModal(false)}
+                            aria-label="Fechar perfil"
+                        >
                             <i className="bi bi-x-lg" aria-hidden="true" />
                         </button>
-                        <h3 className="modal-title">Meu Perfil</h3>
 
-                        <div className="row g-3">
-                            <div className="col-md-6">
-                                <label className="form-label">Nome Completo</label>
-                                <input type="text" className="form-control" value={editData.nome} onChange={(e) => setEditData({ ...editData, nome: e.target.value })} />
+                        <div className="profile-modal-heading">
+                            <div className="profile-modal-emblem">
+                                <i className="bi bi-person" aria-hidden="true" />
                             </div>
-                            <div className="col-md-6">
-                                <label className="form-label">CPF</label>
-                                <input type="text" className="form-control" value={editData.cpf} onChange={(e) => setEditData({ ...editData, cpf: e.target.value })} />
+
+                            <div>
+                                <span className="profile-modal-eyebrow">
+                                    Área do cliente
+                                </span>
+
+                                <h3
+                                    className="modal-title"
+                                    id="profile-modal-title"
+                                >
+                                    Meu Perfil
+                                </h3>
+
+                                <p className="profile-modal-description">
+                                    Atualize suas informações pessoais e seus dados de contato.
+                                </p>
                             </div>
+                        </div>
+
+                        <div className="profile-section-heading">
+                            <i
+                                className="bi bi-person-lines-fill"
+                                aria-hidden="true"
+                            />
+                            <span>Dados pessoais</span>
+                        </div>
+
+                        <div className="row g-3 profile-fields">
                             <div className="col-md-6">
-                                <label className="form-label">E-mail</label>
-                                <input type="email" className="form-control" value={editData.email} onChange={(e) => setEditData({ ...editData, email: e.target.value })} />
+                                <label htmlFor="profile-nome" className="form-label">
+                                    Nome Completo
+                                </label>
+
+                                <input
+                                    id="profile-nome"
+                                    type="text"
+                                    className="form-control"
+                                    value={editData.nome}
+                                    onChange={event => setEditData({
+                                        ...editData,
+                                        nome: event.target.value
+                                    })}
+                                />
                             </div>
+
                             <div className="col-md-6">
-                                <label className="form-label">Telefone</label>
-                                <input type="text" className="form-control" value={editData.telefone} onChange={(e) => setEditData({ ...editData, telefone: e.target.value })} />
+                                <label htmlFor="profile-cpf" className="form-label">
+                                    CPF
+                                </label>
+
+                                <input
+                                    id="profile-cpf"
+                                    type="text"
+                                    className="form-control"
+                                    value={editData.cpf}
+                                    onChange={event => setEditData({
+                                        ...editData,
+                                        cpf: event.target.value
+                                    })}
+                                />
                             </div>
+
                             <div className="col-md-6">
-                                <label className="form-label">Senha</label>
-                                <input type="password" className="form-control" value={editData.senha} onChange={(e) => setEditData({ ...editData, senha: e.target.value })} />
+                                <label htmlFor="profile-email" className="form-label">
+                                    E-mail
+                                </label>
+
+                                <input
+                                    id="profile-email"
+                                    type="email"
+                                    className="form-control"
+                                    value={editData.email}
+                                    onChange={event => setEditData({
+                                        ...editData,
+                                        email: event.target.value
+                                    })}
+                                />
                             </div>
+
                             <div className="col-md-6">
-                                <label className="form-label">Confirmar Senha</label>
-                                <input type="password" className="form-control" value={editData.confirmarsenha} onChange={(e) => setEditData({ ...editData, confirmarsenha: e.target.value })} />
+                                <label htmlFor="profile-telefone" className="form-label">
+                                    Telefone
+                                </label>
+
+                                <input
+                                    id="profile-telefone"
+                                    type="tel"
+                                    className="form-control"
+                                    value={editData.telefone}
+                                    onChange={event => setEditData({
+                                        ...editData,
+                                        telefone: event.target.value
+                                    })}
+                                />
                             </div>
+
+                            <div className="col-md-6">
+                                <label htmlFor="profile-senha" className="form-label">
+                                    Senha
+                                </label>
+
+                                <input
+                                    id="profile-senha"
+                                    type="password"
+                                    className="form-control"
+                                    value={editData.senha}
+                                    onChange={event => setEditData({
+                                        ...editData,
+                                        senha: event.target.value
+                                    })}
+                                />
+                            </div>
+
+                            <div className="col-md-6">
+                                <label htmlFor="profile-confirmarsenha" className="form-label">
+                                    Confirmar Senha
+                                </label>
+
+                                <input
+                                    id="profile-confirmarsenha"
+                                    type="password"
+                                    className="form-control"
+                                    value={editData.confirmarsenha}
+                                    onChange={event => setEditData({
+                                        ...editData,
+                                        confirmarsenha: event.target.value
+                                    })}
+                                />
+                            </div>
+
                             <div className="col-12 mt-2">
                                 <hr />
                                 <h5 className="modal-subtitle">Endereço</h5>
                             </div>
+
                             <div className="col-md-6">
-                                <label className="form-label">Endereço</label>
-                                <input type="text" className="form-control" value={editData.endereco} onChange={(e) => setEditData({ ...editData, endereco: e.target.value })} />
+                                <label htmlFor="profile-endereco" className="form-label">
+                                    Endereço
+                                </label>
+
+                                <input
+                                    id="profile-endereco"
+                                    type="text"
+                                    className="form-control"
+                                    value={editData.endereco}
+                                    onChange={event => setEditData({
+                                        ...editData,
+                                        endereco: event.target.value
+                                    })}
+                                />
                             </div>
+
                             <div className="col-md-6">
-                                <label className="form-label">Cidade</label>
-                                <input type="text" className="form-control" value={editData.cidade} onChange={(e) => setEditData({ ...editData, cidade: e.target.value })} />
+                                <label htmlFor="profile-cidade" className="form-label">
+                                    Cidade
+                                </label>
+
+                                <input
+                                    id="profile-cidade"
+                                    type="text"
+                                    className="form-control"
+                                    value={editData.cidade}
+                                    onChange={event => setEditData({
+                                        ...editData,
+                                        cidade: event.target.value
+                                    })}
+                                />
                             </div>
+
                             <div className="col-md-6">
-                                <label className="form-label">Estado</label>
-                                <input type="text" className="form-control" value={editData.estado} onChange={(e) => setEditData({ ...editData, estado: e.target.value })} />
+                                <label htmlFor="profile-estado" className="form-label">
+                                    Estado
+                                </label>
+
+                                <input
+                                    id="profile-estado"
+                                    type="text"
+                                    className="form-control"
+                                    value={editData.estado}
+                                    onChange={event => setEditData({
+                                        ...editData,
+                                        estado: event.target.value
+                                    })}
+                                />
                             </div>
+
                             <div className="col-md-6">
-                                <label className="form-label">CEP</label>
-                                <input type="text" className="form-control" value={editData.cep} onChange={(e) => setEditData({ ...editData, cep: e.target.value })} />
+                                <label htmlFor="profile-cep" className="form-label">
+                                    CEP
+                                </label>
+
+                                <input
+                                    id="profile-cep"
+                                    type="text"
+                                    className="form-control"
+                                    value={editData.cep}
+                                    onChange={event => setEditData({
+                                        ...editData,
+                                        cep: event.target.value
+                                    })}
+                                />
                             </div>
+
                             <div className="col-12 mt-2">
                                 <hr />
                                 <h5 className="modal-subtitle">Cartão Cadastrado</h5>
                             </div>
+
                             <div className="col-md-5">
-                                <label className="form-label">Número</label>
-                                <input type="text" className="form-control" value={editData.cartao} onChange={(e) => setEditData({ ...editData, cartao: e.target.value })} />
+                                <label htmlFor="profile-cartao" className="form-label">
+                                    Número
+                                </label>
+
+                                <input
+                                    id="profile-cartao"
+                                    type="text"
+                                    className="form-control"
+                                    value={editData.cartao}
+                                    onChange={event => setEditData({
+                                        ...editData,
+                                        cartao: event.target.value
+                                    })}
+                                />
                             </div>
+
                             <div className="col-md-3">
-                                <label className="form-label">Bandeira</label>
-                                <input type="text" className="form-control" value={editData.bandeira} onChange={(e) => setEditData({ ...editData, bandeira: e.target.value })} />
+                                <label htmlFor="profile-bandeira" className="form-label">
+                                    Bandeira
+                                </label>
+
+                                <input
+                                    id="profile-bandeira"
+                                    type="text"
+                                    className="form-control"
+                                    value={editData.bandeira}
+                                    onChange={event => setEditData({
+                                        ...editData,
+                                        bandeira: event.target.value
+                                    })}
+                                />
                             </div>
+
                             <div className="col-md-2">
-                                <label className="form-label">Validade</label>
-                                <input type="text" className="form-control" value={editData.validade} onChange={(e) => setEditData({ ...editData, validade: e.target.value })} />
+                                <label htmlFor="profile-validade" className="form-label">
+                                    Validade
+                                </label>
+
+                                <input
+                                    id="profile-validade"
+                                    type="text"
+                                    className="form-control"
+                                    value={editData.validade}
+                                    onChange={event => setEditData({
+                                        ...editData,
+                                        validade: event.target.value
+                                    })}
+                                />
                             </div>
+
                             <div className="col-md-2">
-                                <label className="form-label">CVV</label>
-                                <input type="password" className="form-control" value={editData.cvv} onChange={(e) => setEditData({ ...editData, cvv: e.target.value })} maxLength="4" />
+                                <label htmlFor="profile-cvv" className="form-label">
+                                    CVV
+                                </label>
+
+                                <input
+                                    id="profile-cvv"
+                                    type="password"
+                                    className="form-control"
+                                    value={editData.cvv}
+                                    onChange={event => setEditData({
+                                        ...editData,
+                                        cvv: event.target.value
+                                    })}
+                                    maxLength={4}
+                                    autoComplete="off"
+                                />
                             </div>
                         </div>
 
                         <div className="modal-actions">
-                            <button className="btn-secondary" onClick={() => setShowProfileModal(false)}>Cancelar</button>
-                            <button className="btn-primary" onClick={handleSaveProfile}>Salvar</button>
+                            <button
+                                type="button"
+                                className="btn-secondary"
+                                onClick={() => setShowProfileModal(false)}
+                            >
+                                Cancelar
+                            </button>
+
+                            <button
+                                type="button"
+                                className="btn-primary"
+                                onClick={handleSaveProfile}
+                            >
+                                Salvar alterações
+                            </button>
                         </div>
                     </div>
                 </div>
             )}
 
             {showFavoritesModal && (
-                <div className="modal-overlay" onClick={() => setShowFavoritesModal(false)}>
-                    <div className="modal-box modal-favorites" onClick={(e) => e.stopPropagation()}>
-                        <button className="modal-close-x" onClick={() => setShowFavoritesModal(false)} aria-label="Fechar">
+                <div
+                    className="modal-overlay"
+                    onClick={() => setShowFavoritesModal(false)}
+                >
+                    <div
+                        ref={favoritesModalRef}
+                        className="modal-box modal-favorites"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="favorites-modal-title"
+                        onClick={event => event.stopPropagation()}
+                    >
+                        <button
+                            type="button"
+                            className="modal-close-x"
+                            onClick={() => setShowFavoritesModal(false)}
+                            aria-label="Fechar favoritos"
+                        >
                             <i className="bi bi-x-lg" aria-hidden="true" />
                         </button>
-                        <h3 className="modal-title">Meus Favoritos</h3>
+
+                        <div className="favorites-modal-heading">
+                            <p className="favorites-modal-eyebrow">
+                                <span className="favorites-modal-eyebrow-line" />
+                                Sua seleção especial
+                            </p>
+
+                            <h3
+                                className="modal-title"
+                                id="favorites-modal-title"
+                            >
+                                Meus <em>favoritos.</em>
+                            </h3>
+
+                            <p className="favorites-modal-description">
+                                Um cantinho para guardar as flores, plantas e presentes
+                                que você mais gostou.
+                            </p>
+
+                            <div className="favorites-modal-total">
+                                <i className="bi bi-heart" aria-hidden="true" />
+
+                                <span>
+                                    {favoritesCount === 1
+                                        ? '1 produto salvo'
+                                        : `${favoritesCount} produtos salvos`}
+                                </span>
+                            </div>
+                        </div>
 
                         {favorites.length === 0 ? (
-                            <p className="modal-empty">Você ainda não tem produtos favoritos.</p>
+                            <div className="favorites-empty-state">
+                                <div className="favorites-empty-icon">
+                                    <i
+                                        className="bi bi-heart"
+                                        aria-hidden="true"
+                                    />
+                                </div>
+
+                                <h4>Sua lista está esperando por você.</h4>
+
+                                <p>
+                                    Ainda não há produtos favoritos. Explore nossa
+                                    floricultura e guarde os que mais combinam com você.
+                                </p>
+
+                                <Link
+                                    to="/"
+                                    className="favorites-empty-link"
+                                    onClick={() => setShowFavoritesModal(false)}
+                                >
+                                    Explorar produtos
+                                    <i
+                                        className="bi bi-arrow-up-right"
+                                        aria-hidden="true"
+                                    />
+                                </Link>
+                            </div>
                         ) : (
                             <>
                                 <div className="favorites-list">
-                                    {currentFavorites.map((item) => (
-                                        <div key={item.id} className="favorites-item">
-                                            <img src={item.image} alt={item.name} className="favorites-thumb" />
+                                    {currentFavorites.map(item => (
+                                        <article
+                                            key={item.id}
+                                            className="favorites-item"
+                                            
+                                        >
+                                            <div className="favorites-image-wrap">
+                                                <img
+                                                    src={item.image}
+                                                    alt={item.name}
+                                                    className="favorites-thumb"
+                                                    loading="lazy"
+                                                    onClick={() => openProductModal(item)}
+                                                />
+                                            </div>
+
                                             <div className="favorites-info">
-                                                <h6 className="favorites-name">{item.name}</h6>
-                                                <small className="favorites-price">{formatCurrency(item.price)}</small>
+                                                <span className="favorites-item-label">
+                                                    Selecionado por você
+                                                </span>
+
+                                                <h4 className="favorites-name">
+                                                    {item.name}
+                                                </h4>
+
+                                                <span className="favorites-price">
+                                                    {formatCurrency(item.price)}
+                                                </span>
                                             </div>
+
                                             <div className="favorites-actions">
-                                                <button className="favorites-action" onClick={() => openProductModal(item)} title="Ver detalhes">
-                                                    <i className="bi bi-eye"></i>
+                                                <button
+                                                    type="button"
+                                                    className="favorites-action"
+                                                    onClick={() => openProductModal(item)}
+                                                    title="Ver detalhes"
+                                                    aria-label={`Ver detalhes de ${item.name}`}
+                                                >
+                                                    <i
+                                                        className="bi bi-eye"
+                                                        aria-hidden="true"
+                                                    />
                                                 </button>
-                                                <button className="favorites-action is-danger" onClick={() => handleRemoveFavorite(item.id, item.name)} title="Remover dos favoritos">
-                                                    <i className="bi bi-heart-fill"></i>
+
+                                                <button
+                                                    type="button"
+                                                    className="favorites-action is-danger"
+                                                    onClick={() => handleRemoveFavorite(item.id)}
+                                                    title="Remover dos favoritos"
+                                                    aria-label={`Remover ${item.name} dos favoritos`}
+                                                >
+                                                    <i
+                                                        className="bi bi-heart-fill"
+                                                        aria-hidden="true"
+                                                    />
                                                 </button>
                                             </div>
-                                        </div>
+                                        </article>
                                     ))}
                                 </div>
-                                {totalPages > 1 && (
-                                    <div className="favorites-footer">
-                                        {renderPagination()}
-                                        <div className="favorites-count">
-                                            Mostrando {startIndex + 1} - {Math.min(startIndex + itemsPerPage, favorites.length)} de {favorites.length} produtos
-                                        </div>
-                                    </div>
-                                )}
+
+                                <div className="favorites-footer">
+                                    {renderPagination()}
+
+                                    <p className="favorites-count">
+                                        Mostrando {startIndex + 1}–{Math.min(
+                                            startIndex + itemsPerPage,
+                                            favorites.length
+                                        )} de {favorites.length} produtos
+                                    </p>
+                                </div>
                             </>
                         )}
                     </div>
@@ -546,19 +1187,61 @@ function Navbar() {
             />
 
             {showLogoutModal && (
-                <div className="modal-overlay" onClick={() => setShowLogoutModal(false)}>
-                    <div className="modal-box modal-small" onClick={(e) => e.stopPropagation()}>
-                        <button className="modal-close-x" onClick={() => setShowLogoutModal(false)} aria-label="Fechar">
+                <div
+                    className="modal-overlay"
+                    onClick={() => setShowLogoutModal(false)}
+                >
+                    <div
+                        ref={logoutModalRef}
+                        className="modal-box modal-small"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="logout-modal-title"
+                        onClick={event => event.stopPropagation()}
+                    >
+                        <button
+                            type="button"
+                            className="modal-close-x"
+                            onClick={() => setShowLogoutModal(false)}
+                            aria-label="Fechar"
+                        >
                             <i className="bi bi-x-lg" aria-hidden="true" />
                         </button>
+
                         <div className="modal-confirm">
-                            <i className="bi bi-box-arrow-right modal-confirm-icon" aria-hidden="true"></i>
-                            <h4 className="modal-title">Deseja sair?</h4>
-                            <p className="modal-text">Tem certeza que deseja sair da sua conta?</p>
+                            <i
+                                className="bi bi-box-arrow-right modal-confirm-icon"
+                                aria-hidden="true"
+                            />
+
+                            <h4
+                                className="modal-title"
+                                id="logout-modal-title"
+                            >
+                                Deseja sair?
+                            </h4>
+
+                            <p className="modal-text">
+                                Tem certeza que deseja sair da sua conta?
+                            </p>
                         </div>
+
                         <div className="modal-actions">
-                            <button className="btn-secondary" onClick={() => setShowLogoutModal(false)}>Cancelar</button>
-                            <button className="btn-primary" onClick={handleLogout}>Sair</button>
+                            <button
+                                type="button"
+                                className="btn-secondary"
+                                onClick={() => setShowLogoutModal(false)}
+                            >
+                                Cancelar
+                            </button>
+
+                            <button
+                                type="button"
+                                className="btn-primary"
+                                onClick={handleLogout}
+                            >
+                                Confirmar saída
+                            </button>
                         </div>
                     </div>
                 </div>

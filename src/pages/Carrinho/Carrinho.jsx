@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { formatCurrency } from '../../utils/formatCurrency';
-import FadeIn from '../../components/FadeIn/FadeIn';
 import ProductModal from '../../components/ProductModal/ProductModal';
 import Footer from '../../components/Footer/Footer';
 import { products } from '../../data/products';
@@ -11,34 +10,67 @@ import { presentesProducts } from '../../data/presentesData';
 import { vasosProducts } from '../../data/vasosData';
 import './Carrinho.scss';
 
+const initialFormData = {
+    name: '',
+    address: '',
+    city: '',
+    state: '',
+    zip: ''
+};
+
+const states = [
+    'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF',
+    'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA',
+    'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS',
+    'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
+];
+
+const allProducts = [
+    ...products,
+    ...sementesProducts,
+    ...presentesProducts,
+    ...vasosProducts
+];
+
 function Carrinho() {
-    const { cart, addToCart, addMultipleToCart, removeFromCart, updateQuantity, clearCart, getCartTotal, showNotification } = useCart();
+    const {
+        cart,
+        addToCart,
+        addMultipleToCart,
+        removeFromCart,
+        updateQuantity,
+        clearCart,
+        getCartTotal,
+        showNotification
+    } = useCart();
+
     const navigate = useNavigate();
+
     const [loading, setLoading] = useState(true);
     const [showClearModal, setShowClearModal] = useState(false);
-    const [showRemoveModal, setShowRemoveModal] = useState(false);
     const [itemToRemove, setItemToRemove] = useState(null);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [formData, setFormData] = useState({
-        name: 'Maria José',
-        address: 'Rua das Flores, 123',
-        city: 'Mogi das Cruzes',
-        state: 'SP',
-        zip: '08773-000'
+
+    const [formData, setFormData] = useState(() => {
+        try {
+            const saved = localStorage.getItem('shippingFormData');
+
+            if (saved) {
+                return {
+                    ...initialFormData,
+                    ...JSON.parse(saved)
+                };
+            }
+        } catch (error) {
+            return initialFormData;
+        }
+
+        return initialFormData;
     });
 
     useEffect(() => {
-        const savedShipping = localStorage.getItem('shippingFormData');
-        if (savedShipping) {
-            try {
-                const parsed = JSON.parse(savedShipping);
-                if (parsed.name || parsed.address) {
-                    setFormData(parsed);
-                }
-            } catch (e) {}
-        }
-        const timer = setTimeout(() => setLoading(false), 1500);
+        const timer = setTimeout(() => setLoading(false), 700);
         return () => clearTimeout(timer);
     }, []);
 
@@ -46,37 +78,73 @@ function Carrinho() {
         localStorage.setItem('shippingFormData', JSON.stringify(formData));
     }, [formData]);
 
-    const handleInputChange = (e) => {
-        const { id, value } = e.target;
-        const fieldName = id.replace('customer-', '');
-        setFormData(prev => ({
-            ...prev,
-            [fieldName]: value
+    const itemCount = cart.reduce(
+        (total, item) => total + Number(item.quantity || 0),
+        0
+    );
+
+    const totals = useMemo(() => {
+        const subtotal = getCartTotal();
+        const shipping = subtotal > 100 ? 0 : 15;
+        const discount = subtotal > 150 ? subtotal * 0.1 : 0;
+
+        return {
+            subtotal,
+            shipping,
+            discount,
+            total: subtotal + shipping - discount
+        };
+    }, [cart, getCartTotal]);
+
+    const freeShippingRemaining = Math.max(0, 100.01 - totals.subtotal);
+    const hasFreeShipping = totals.shipping === 0;
+    const shippingProgress = Math.min(
+        100,
+        (totals.subtotal / 100.01) * 100
+    );
+
+    const handleInputChange = (event) => {
+        const { name, value } = event.target;
+
+        setFormData((previous) => ({
+            ...previous,
+            [name]: value
         }));
     };
 
-    const handleQuantityChange = (productId, newQuantity) => {
-        if (newQuantity >= 1 && newQuantity <= 10) {
-            updateQuantity(productId, newQuantity);
-            const item = cart.find(p => p.id === productId);
-            if (item) {
-                showNotification(`Quantidade de ${item.name} atualizada para ${newQuantity}`, 'success');
-            }
-        }
+    const handleZipChange = (event) => {
+        const digits = event.target.value.replace(/\D/g, '').slice(0, 8);
+        const formatted = digits.length > 5
+            ? `${digits.slice(0, 5)}-${digits.slice(5)}`
+            : digits;
+
+        setFormData((previous) => ({
+            ...previous,
+            zip: formatted
+        }));
     };
 
-    const handleRemoveClick = (item) => {
-        setItemToRemove(item);
-        setShowRemoveModal(true);
+    const handleQuantityChange = (item, quantity) => {
+        if (quantity < 1 || quantity > 10) return;
+
+        updateQuantity(item.id, quantity);
+
+        showNotification(
+            `Quantidade de ${item.name} atualizada para ${quantity}`,
+            'success'
+        );
     };
 
     const confirmRemove = () => {
-        if (itemToRemove) {
-            removeFromCart(itemToRemove.id);
-            showNotification(`${itemToRemove.name} removido do carrinho!`, 'success');
-            setItemToRemove(null);
-            setShowRemoveModal(false);
-        }
+        if (!itemToRemove) return;
+
+        removeFromCart(itemToRemove.id);
+        showNotification(
+            `${itemToRemove.name} removido do carrinho!`,
+            'success'
+        );
+
+        setItemToRemove(null);
     };
 
     const handleClearCart = () => {
@@ -85,39 +153,12 @@ function Carrinho() {
         setShowClearModal(false);
     };
 
-    const calculateTotals = () => {
-        const subtotal = getCartTotal();
-        const shipping = subtotal > 100 ? 0 : 15;
-        const discount = subtotal > 150 ? subtotal * 0.1 : 0;
-        return { subtotal, shipping, discount, total: subtotal + shipping - discount };
-    };
-
-    const handleCheckout = (e) => {
-        e.preventDefault();
-        if (cart.length === 0) return;
-
-        localStorage.setItem('customerData', JSON.stringify(formData));
-        localStorage.setItem('cart', JSON.stringify(cart));
-        navigate('/pagamento');
-    };
-
-    const goBack = () => {
-        navigate(-1);
-    };
-
-    const getAllProducts = () => {
-        return [...products, ...sementesProducts, ...presentesProducts, ...vasosProducts];
-    };
-
-    const getFullProduct = (cartItem) => {
-        const allProducts = getAllProducts();
-        const found = allProducts.find(p => p.id === cartItem.id);
-        return found || cartItem;
-    };
-
     const openModal = (item) => {
-        const fullProduct = getFullProduct(item);
-        setSelectedProduct(fullProduct);
+        const fullProduct = allProducts.find(
+            (product) => product.id === item.id
+        );
+
+        setSelectedProduct(fullProduct || item);
         setIsModalOpen(true);
     };
 
@@ -126,332 +167,463 @@ function Carrinho() {
         setSelectedProduct(null);
     };
 
-    const totals = calculateTotals();
+    const handleCheckout = (event) => {
+        event.preventDefault();
+
+        if (cart.length === 0) return;
+
+        localStorage.setItem('customerData', JSON.stringify(formData));
+        localStorage.setItem('cart', JSON.stringify(cart));
+
+        navigate('/pagamento');
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    };
 
     if (loading) {
         return (
             <div className="loading-overlay">
-                <i className="bi bi-flower1 loading-logo"></i>
-            </div>
-        );
-    }
-
-    if (cart.length === 0) {
-        return (
-            <div className="carrinho-page">
-                <div className="cart-container">
-                    <FadeIn direction="up">
-                        <header className="cart-header">
-                            <p className="cart-eyebrow">
-                                <span className="cart-eyebrow-line" />
-                                Etapa 1 de 3
-                            </p>
-                            <h1 className="cart-title">
-                                Meu <em className="cart-hand">carrinho.</em>
-                            </h1>
-                        </header>
-                    </FadeIn>
-
-                    <nav className="cart-steps" aria-label="Etapas do pedido">
-                        <div className="cart-step is-active">
-                            <span className="cart-step-number">1</span>
-                            <span className="cart-step-label">Carrinho</span>
-                        </div>
-                        <div className="cart-step">
-                            <span className="cart-step-number">2</span>
-                            <span className="cart-step-label">Pagamento</span>
-                        </div>
-                        <div className="cart-step">
-                            <span className="cart-step-number">3</span>
-                            <span className="cart-step-label">Confirmação</span>
-                        </div>
-                    </nav>
-
-                    <div className="cart-empty">
-                        <i className="bi bi-cart-x cart-empty-icon" aria-hidden="true" />
-                        <h2 className="cart-empty-title">Seu carrinho está vazio.</h2>
-                        <p className="cart-empty-text">
-                            Adicione produtos para continuar com a compra.
-                        </p>
-                        <Link to="/" className="cart-btn cart-btn-primary">
-                            <span className="cart-btn-icon" aria-hidden="true">
-                                <i className="bi bi-arrow-up-right" />
-                            </span>
-                            Voltar às compras
-                        </Link>
-                    </div>
-                </div>
-                <Footer />
+                <i className="bi bi-flower1 loading-logo" />
             </div>
         );
     }
 
     return (
         <div className="carrinho-page">
-            <div className="cart-container">
-                <FadeIn direction="up">
-                    <header className="cart-header">
-                        <p className="cart-eyebrow">
+            <main className="cart-container">
+                <div className="cart-intro">
+                    <div className="cart-intro-copy">
+                        <div className="cart-eyebrow">
                             <span className="cart-eyebrow-line" />
-                            Etapa 1 de 3
-                        </p>
+                            <span>Seu pedido</span>
+                        </div>
+
                         <h1 className="cart-title">
-                            Meu <em className="cart-hand">carrinho.</em>
+                            Seu carrinho<span>.</span>
                         </h1>
-                    </header>
-                </FadeIn>
 
-                <nav className="cart-steps" aria-label="Etapas do pedido">
-                    <div className="cart-step is-active">
-                        <span className="cart-step-number">1</span>
-                        <span className="cart-step-label">Carrinho</span>
+                        <p className="cart-subtitle">
+                            Confira suas escolhas e prepare tudo para a entrega.
+                        </p>
                     </div>
-                    <div className="cart-step">
-                        <span className="cart-step-number">2</span>
-                        <span className="cart-step-label">Pagamento</span>
-                    </div>
-                    <div className="cart-step">
-                        <span className="cart-step-number">3</span>
-                        <span className="cart-step-label">Confirmação</span>
-                    </div>
-                </nav>
 
-                <div className="cart-grid">
-                    <div className="cart-main">
-                        <div className="cart-table-wrap">
-                            <table className="cart-table">
-                                <thead>
-                                    <tr>
-                                        <th>Produto</th>
-                                        <th>Preço</th>
-                                        <th>Quantidade</th>
-                                        <th>Subtotal</th>
-                                        <th aria-label="Ações" />
-                                    </tr>
-                                </thead>
-                                <tbody>
+                    <Link to="/" className="cart-back-link">
+                        <i className="bi bi-arrow-left" aria-hidden="true" />
+                        Continuar explorando
+                    </Link>
+                </div>
+
+                <div className="cart-progress">
+                    <div className="cart-progress-step is-current">
+                        <span className="cart-progress-number">01</span>
+                        <span>Carrinho</span>
+                    </div>
+
+                    <span className="cart-progress-divider" />
+
+                    <div className="cart-progress-step">
+                        <span className="cart-progress-number">02</span>
+                        <span>Pagamento</span>
+                    </div>
+
+                    <span className="cart-progress-divider" />
+
+                    <div className="cart-progress-step">
+                        <span className="cart-progress-number">03</span>
+                        <span>Confirmação</span>
+                    </div>
+                </div>
+
+                {cart.length === 0 ? (
+                    <section className="cart-empty">
+                        <div className="cart-empty-art">
+                            <div className="cart-empty-art-inner">
+                                <i className="bi bi-bag-heart" aria-hidden="true" />
+                            </div>
+                            <span className="cart-empty-art-decoration decoration-one" />
+                            <span className="cart-empty-art-decoration decoration-two" />
+                        </div>
+
+                        <div className="cart-empty-content">
+                            <span className="cart-section-eyebrow">
+                                Sua seleção está esperando
+                            </span>
+
+                            <h2>Ainda não há flores por aqui.</h2>
+
+                            <p>
+                                Explore nosso acervo e escolha plantas, flores
+                                e presentes para tornar qualquer momento especial.
+                            </p>
+
+                            <Link to="/" className="cart-primary-button">
+                                Explorar produtos
+                                <i className="bi bi-arrow-up-right" aria-hidden="true" />
+                            </Link>
+                        </div>
+                    </section>
+                ) : (
+                    <div className="cart-layout">
+                        <div className="cart-content">
+                            <section className="cart-products-section">
+                                <div className="cart-section-heading">
+                                    <div>
+                                        <span className="cart-section-eyebrow">
+                                            Suas escolhas
+                                        </span>
+
+                                        <h2>Produtos selecionados</h2>
+                                    </div>
+
+                                    <span className="cart-items-counter">
+                                        {itemCount} {itemCount === 1 ? 'item' : 'itens'}
+                                    </span>
+                                </div>
+
+                                <div className="cart-products">
                                     {cart.map((item) => (
-                                        <tr key={item.id}>
-                                            <td data-label="Produto">
-                                                <div className="cart-item-info">
-                                                    <img
-                                                        src={item.image}
-                                                        className="cart-item-img"
-                                                        alt={item.name}
-                                                    />
-                                                    <div className="cart-item-meta">
-                                                        <p className="cart-item-name">{item.name}</p>
-                                                        <p className="cart-item-code">Código: {item.id}</p>
+                                        <article className="cart-product" key={item.id}>
+                                            <button
+                                                type="button"
+                                                className="cart-product-image-button"
+                                                onClick={() => openModal(item)}
+                                                aria-label={`Ver detalhes de ${item.name}`}
+                                            >
+                                                <img
+                                                    src={item.image}
+                                                    alt={item.name}
+                                                    className="cart-product-image"
+                                                />
+                                            </button>
+
+                                            <div className="cart-product-details">
+                                                <div className="cart-product-heading">
+                                                    <div className="cart-product-description">
+                                                        <span className="cart-product-label">
+                                                            Selecionado para você
+                                                        </span>
+
+                                                        <h3>{item.name}</h3>
+
+                                                        <span className="cart-product-code">
+                                                            Ref. {item.id}
+                                                        </span>
+                                                    </div>
+
+                                                    <button
+                                                        type="button"
+                                                        className="cart-product-remove"
+                                                        onClick={() => setItemToRemove(item)}
+                                                        aria-label={`Remover ${item.name} do carrinho`}
+                                                        title="Remover produto"
+                                                    >
+                                                        <i className="bi bi-trash3" aria-hidden="true" />
+                                                    </button>
+                                                </div>
+
+                                                <div className="cart-product-unit-price">
+                                                    Valor unitário
+                                                    <strong>{formatCurrency(item.price)}</strong>
+                                                </div>
+
+                                                <div className="cart-product-footer">
+                                                    <div className="cart-product-quantity-group">
+                                                        <span className="cart-product-field-label">
+                                                            Quantidade
+                                                        </span>
+
+                                                        <div className="cart-quantity">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleQuantityChange(item, item.quantity - 1)}
+                                                                disabled={item.quantity <= 1}
+                                                                aria-label={`Diminuir quantidade de ${item.name}`}
+                                                            >
+                                                                <i className="bi bi-dash" aria-hidden="true" />
+                                                            </button>
+
+                                                            <span aria-live="polite">
+                                                                {item.quantity}
+                                                            </span>
+
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleQuantityChange(item, item.quantity + 1)}
+                                                                disabled={item.quantity >= 10}
+                                                                aria-label={`Aumentar quantidade de ${item.name}`}
+                                                            >
+                                                                <i className="bi bi-plus" aria-hidden="true" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="cart-product-subtotal">
+                                                        <span className="cart-product-field-label">
+                                                            Total do produto
+                                                        </span>
+
+                                                        <strong>
+                                                            {formatCurrency(item.price * item.quantity)}
+                                                        </strong>
                                                     </div>
                                                 </div>
-                                            </td>
-                                            <td data-label="Preço" className="cart-cell-price">
-                                                {formatCurrency(item.price)}
-                                            </td>
-                                            <td data-label="Quantidade">
-                                                <div className="cart-quantity">
-                                                    <button
-                                                        className="cart-quantity-btn"
-                                                        onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                                                        disabled={item.quantity <= 1}
-                                                        aria-label="Diminuir quantidade"
-                                                    >
-                                                        <i className="bi bi-dash" aria-hidden="true" />
-                                                    </button>
-                                                    <input
-                                                        type="number"
-                                                        className="cart-quantity-input"
-                                                        value={item.quantity}
-                                                        min="1"
-                                                        max="10"
-                                                        aria-label="Quantidade"
-                                                        onChange={(e) => {
-                                                            const val = parseInt(e.target.value);
-                                                            if (!isNaN(val) && val >= 1 && val <= 10) {
-                                                                updateQuantity(item.id, val);
-                                                                showNotification(`Quantidade de ${item.name} atualizada para ${val}`, 'success');
-                                                            }
-                                                        }}
-                                                    />
-                                                    <button
-                                                        className="cart-quantity-btn"
-                                                        onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                                                        disabled={item.quantity >= 10}
-                                                        aria-label="Aumentar quantidade"
-                                                    >
-                                                        <i className="bi bi-plus" aria-hidden="true" />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                            <td data-label="Subtotal" className="cart-cell-subtotal">
-                                                {formatCurrency(item.price * item.quantity)}
-                                            </td>
-                                            <td>
-                                                <div className="cart-item-actions">
-                                                    <button
-                                                        className="cart-item-action"
-                                                        onClick={() => openModal(item)}
-                                                        aria-label="Ver detalhes"
-                                                        title="Ver detalhes"
-                                                    >
-                                                        <i className="bi bi-eye" aria-hidden="true" />
-                                                    </button>
-                                                    <button
-                                                        className="cart-item-action cart-item-action-danger"
-                                                        onClick={() => handleRemoveClick(item)}
-                                                        aria-label="Remover item"
-                                                        title="Remover item"
-                                                    >
-                                                        <i className="bi bi-trash" aria-hidden="true" />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
+
+                                                <button
+                                                    type="button"
+                                                    className="cart-product-details-link"
+                                                    onClick={() => openModal(item)}
+                                                >
+                                                    Ver detalhes
+                                                    <i className="bi bi-arrow-up-right" aria-hidden="true" />
+                                                </button>
+                                            </div>
+                                        </article>
                                     ))}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div className="cart-actions">
-                            <button onClick={goBack} className="cart-btn cart-btn-ghost">
-                                Continuar comprando
-                            </button>
-                            <button
-                                className="cart-btn cart-btn-ghost cart-btn-danger"
-                                onClick={() => setShowClearModal(true)}
-                            >
-                                Limpar carrinho
-                            </button>
-                        </div>
-                    </div>
-
-                    <aside className="cart-aside">
-                        <div className="cart-summary">
-                            <h2 className="cart-summary-title">Resumo do pedido</h2>
-
-                            <div className="cart-summary-row">
-                                <span>Subtotal</span>
-                                <span>{formatCurrency(totals.subtotal)}</span>
-                            </div>
-                            <div className="cart-summary-row">
-                                <span>Frete</span>
-                                <span>{totals.shipping === 0 ? 'Grátis' : formatCurrency(totals.shipping)}</span>
-                            </div>
-                            <div className="cart-summary-row">
-                                <span>Desconto</span>
-                                <span className="cart-summary-discount">
-                                    {totals.discount > 0 ? `- ${formatCurrency(totals.discount)}` : '-'}
-                                </span>
-                            </div>
-                            <div className="cart-summary-row cart-summary-total">
-                                <span>Total</span>
-                                <span>{formatCurrency(totals.total)}</span>
-                            </div>
-
-                            <form onSubmit={handleCheckout} className="cart-shipping">
-                                <h3 className="cart-shipping-title">Dados de entrega</h3>
-
-                                <div className="cart-field">
-                                    <label htmlFor="customer-name" className="cart-label">Nome completo *</label>
-                                    <input
-                                        type="text"
-                                        className="cart-input"
-                                        id="customer-name"
-                                        placeholder="Digite seu nome completo"
-                                        value={formData.name}
-                                        onChange={handleInputChange}
-                                        required
-                                    />
                                 </div>
 
-                                <div className="cart-field">
-                                    <label htmlFor="customer-address" className="cart-label">Endereço *</label>
-                                    <input
-                                        type="text"
-                                        className="cart-input"
-                                        id="customer-address"
-                                        placeholder="Rua, número, complemento"
-                                        value={formData.address}
-                                        onChange={handleInputChange}
-                                        required
-                                    />
+                                <div className="cart-products-actions">
+                                    <Link to="/" className="cart-text-link">
+                                        <i className="bi bi-arrow-left" aria-hidden="true" />
+                                        Continuar comprando
+                                    </Link>
+
+                                    <button
+                                        type="button"
+                                        className="cart-clear-button"
+                                        onClick={() => setShowClearModal(true)}
+                                    >
+                                        <i className="bi bi-trash3" aria-hidden="true" />
+                                        Esvaziar carrinho
+                                    </button>
+                                </div>
+                            </section>
+
+                            <section className="cart-delivery-section">
+                                <div className="cart-section-heading">
+                                    <div>
+                                        <span className="cart-section-eyebrow">
+                                            Próximo passo
+                                        </span>
+
+                                        <h2>Dados de entrega</h2>
+                                    </div>
+
+                                    <div className="cart-delivery-icon">
+                                        <i className="bi bi-truck" aria-hidden="true" />
+                                    </div>
                                 </div>
 
-                                <div className="cart-field-row">
+                                <p className="cart-delivery-description">
+                                    Informe onde deseja receber seu pedido.
+                                    Esses dados serão utilizados na finalização da compra.
+                                </p>
+
+                                <form
+                                    id="cart-checkout-form"
+                                    className="cart-delivery-form"
+                                    onSubmit={handleCheckout}
+                                >
                                     <div className="cart-field">
-                                        <label htmlFor="customer-city" className="cart-label">Cidade *</label>
+                                        <label htmlFor="customer-name">
+                                            Nome completo <span>*</span>
+                                        </label>
+
                                         <input
+                                            id="customer-name"
+                                            name="name"
                                             type="text"
-                                            className="cart-input"
-                                            id="customer-city"
-                                            placeholder="Digite sua cidade"
-                                            value={formData.city}
+                                            value={formData.name}
                                             onChange={handleInputChange}
+                                            placeholder="Nome de quem receberá o pedido"
+                                            autoComplete="name"
                                             required
                                         />
                                     </div>
+
                                     <div className="cart-field">
-                                        <label htmlFor="customer-state" className="cart-label">Estado *</label>
-                                        <select
-                                            className="cart-input cart-select"
-                                            id="customer-state"
-                                            value={formData.state}
+                                        <label htmlFor="customer-address">
+                                            Endereço de entrega <span>*</span>
+                                        </label>
+
+                                        <input
+                                            id="customer-address"
+                                            name="address"
+                                            type="text"
+                                            value={formData.address}
                                             onChange={handleInputChange}
+                                            placeholder="Rua, número e complemento"
+                                            autoComplete="street-address"
                                             required
-                                        >
-                                            <option value="">UF</option>
-                                            <option value="SP">SP</option>
-                                            <option value="RJ">RJ</option>
-                                            <option value="MG">MG</option>
-                                            <option value="ES">ES</option>
-                                            <option value="PR">PR</option>
-                                            <option value="SC">SC</option>
-                                            <option value="RS">RS</option>
-                                            <option value="BA">BA</option>
-                                            <option value="PE">PE</option>
-                                            <option value="CE">CE</option>
-                                            <option value="DF">DF</option>
-                                            <option value="GO">GO</option>
-                                            <option value="AM">AM</option>
-                                            <option value="PA">PA</option>
-                                            <option value="MT">MT</option>
-                                            <option value="MS">MS</option>
-                                            <option value="AC">AC</option>
-                                            <option value="AL">AL</option>
-                                            <option value="AP">AP</option>
-                                            <option value="MA">MA</option>
-                                            <option value="PB">PB</option>
-                                            <option value="PI">PI</option>
-                                            <option value="RN">RN</option>
-                                            <option value="RO">RO</option>
-                                            <option value="RR">RR</option>
-                                            <option value="SE">SE</option>
-                                            <option value="TO">TO</option>
-                                        </select>
+                                        />
+                                    </div>
+
+                                    <div className="cart-field-row">
+                                        <div className="cart-field">
+                                            <label htmlFor="customer-city">
+                                                Cidade <span>*</span>
+                                            </label>
+
+                                            <input
+                                                id="customer-city"
+                                                name="city"
+                                                type="text"
+                                                value={formData.city}
+                                                onChange={handleInputChange}
+                                                placeholder="Sua cidade"
+                                                autoComplete="address-level2"
+                                                required
+                                            />
+                                        </div>
+
+                                        <div className="cart-field">
+                                            <label htmlFor="customer-state">
+                                                Estado <span>*</span>
+                                            </label>
+
+                                            <select
+                                                id="customer-state"
+                                                name="state"
+                                                value={formData.state}
+                                                onChange={handleInputChange}
+                                                autoComplete="address-level1"
+                                                required
+                                            >
+                                                <option value="">Selecione</option>
+
+                                                {states.map((state) => (
+                                                    <option key={state} value={state}>
+                                                        {state}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="cart-field cart-field-zip">
+                                        <label htmlFor="customer-zip">
+                                            CEP <span>*</span>
+                                        </label>
+
+                                        <input
+                                            id="customer-zip"
+                                            name="zip"
+                                            type="text"
+                                            inputMode="numeric"
+                                            value={formData.zip}
+                                            onChange={handleZipChange}
+                                            placeholder="00000-000"
+                                            autoComplete="postal-code"
+                                            maxLength={9}
+                                            pattern="[0-9]{5}-[0-9]{3}"
+                                            title="Informe um CEP no formato 00000-000"
+                                            required
+                                        />
+                                    </div>
+                                </form>
+                            </section>
+                        </div>
+
+                        <aside className="cart-sidebar">
+                            <div className="cart-summary">
+                                <div className="cart-summary-header">
+                                    <span className="cart-section-eyebrow">
+                                        Sua compra
+                                    </span>
+
+                                    <h2>Resumo do pedido</h2>
+
+                                    <p>
+                                        Confira os valores antes de continuar.
+                                    </p>
+                                </div>
+
+                                <div className="cart-summary-items">
+                                    <div className="cart-summary-row">
+                                        <span>
+                                            Subtotal ({itemCount} {itemCount === 1 ? 'item' : 'itens'})
+                                        </span>
+                                        <strong>{formatCurrency(totals.subtotal)}</strong>
+                                    </div>
+
+                                    <div className="cart-summary-row">
+                                        <span>Entrega</span>
+                                        <strong className={hasFreeShipping ? 'is-free' : ''}>
+                                            {hasFreeShipping
+                                                ? 'Grátis'
+                                                : formatCurrency(totals.shipping)}
+                                        </strong>
+                                    </div>
+
+                                    <div className="cart-summary-row">
+                                        <span>Desconto</span>
+                                        <strong className={totals.discount > 0 ? 'is-discount' : ''}>
+                                            {totals.discount > 0
+                                                ? `− ${formatCurrency(totals.discount)}`
+                                                : '—'}
+                                        </strong>
                                     </div>
                                 </div>
 
-                                <div className="cart-field">
-                                    <label htmlFor="customer-zip" className="cart-label">CEP *</label>
-                                    <input
-                                        type="text"
-                                        className="cart-input"
-                                        id="customer-zip"
-                                        placeholder="00000-000"
-                                        value={formData.zip}
-                                        onChange={handleInputChange}
-                                        required
-                                    />
+                                <div className="cart-summary-total">
+                                    <span>Total do pedido</span>
+                                    <strong>{formatCurrency(totals.total)}</strong>
                                 </div>
 
-                                <button type="submit" className="cart-btn cart-btn-primary cart-btn-block">
-                                    Finalizar compra
+                                <div className="cart-shipping-benefit">
+                                    <div className="cart-shipping-benefit-heading">
+                                        <i className="bi bi-truck" aria-hidden="true" />
+
+                                        <span>
+                                            {hasFreeShipping
+                                                ? 'Você ganhou frete grátis!'
+                                                : `Faltam ${formatCurrency(freeShippingRemaining)} para frete grátis`}
+                                        </span>
+                                    </div>
+
+                                    <div
+                                        className="cart-shipping-progress"
+                                        role="progressbar"
+                                        aria-valuenow={Math.round(shippingProgress)}
+                                        aria-valuemin={0}
+                                        aria-valuemax={100}
+                                        aria-label="Progresso para frete grátis"
+                                    >
+                                        <span style={{ width: `${shippingProgress}%` }} />
+                                    </div>
+                                </div>
+
+                                {totals.discount > 0 && (
+                                    <div className="cart-discount-note">
+                                        <i className="bi bi-check-circle" aria-hidden="true" />
+                                        Desconto de 10% aplicado ao pedido.
+                                    </div>
+                                )}
+
+                                <button
+                                    type="submit"
+                                    form="cart-checkout-form"
+                                    className="cart-primary-button cart-checkout-button"
+                                >
+                                    Ir para pagamento
+                                    <i className="bi bi-arrow-right" aria-hidden="true" />
                                 </button>
-                            </form>
-                        </div>
-                    </aside>
-                </div>
-            </div>
+
+                                <p className="cart-checkout-note">
+                                    <i className="bi bi-shield-check" aria-hidden="true" />
+                                    Revise seus dados antes de prosseguir.
+                                </p>
+                            </div>
+
+                            <div className="cart-sidebar-message">
+                                <i className="bi bi-flower1" aria-hidden="true" />
+
+                                <p>
+                                    Cada escolha é uma forma de demonstrar carinho.
+                                </p>
+                            </div>
+                        </aside>
+                    </div>
+                )}
+            </main>
 
             <ProductModal
                 product={selectedProduct}
@@ -461,24 +633,61 @@ function Carrinho() {
                 onAddMultiple={addMultipleToCart}
             />
 
-            {showRemoveModal && (
-                <div className="modal-overlay" onClick={() => setShowRemoveModal(false)}>
-                    <div className="modal-box modal-small" onClick={(e) => e.stopPropagation()}>
-                        <button className="modal-close-x" onClick={() => setShowRemoveModal(false)} aria-label="Fechar">
+            {itemToRemove && (
+                <div
+                    className="cart-dialog-overlay"
+                    onMouseDown={(event) => {
+                        if (event.target === event.currentTarget) {
+                            setItemToRemove(null);
+                        }
+                    }}
+                >
+                    <div
+                        className="cart-dialog"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="cart-remove-title"
+                    >
+                        <button
+                            type="button"
+                            className="cart-dialog-close"
+                            onClick={() => setItemToRemove(null)}
+                            aria-label="Fechar"
+                        >
                             <i className="bi bi-x-lg" aria-hidden="true" />
                         </button>
-                        <div className="modal-confirm">
-                            <i className="bi bi-exclamation-circle modal-confirm-icon" aria-hidden="true" />
-                            <h3 className="modal-title">Remover item do carrinho?</h3>
-                            <p className="modal-text">
-                                Tem certeza que deseja remover <strong>{itemToRemove?.name}</strong> do carrinho?
-                            </p>
+
+                        <div className="cart-dialog-icon">
+                            <i className="bi bi-trash3" aria-hidden="true" />
                         </div>
-                        <div className="modal-actions">
-                            <button className="cart-btn cart-btn-ghost" onClick={() => setShowRemoveModal(false)}>
-                                Cancelar
+
+                        <span className="cart-section-eyebrow">
+                            Confirmar alteração
+                        </span>
+
+                        <h2 id="cart-remove-title">
+                            Remover este produto?
+                        </h2>
+
+                        <p>
+                            Deseja remover <strong>{itemToRemove.name}</strong> da
+                            sua seleção?
+                        </p>
+
+                        <div className="cart-dialog-actions">
+                            <button
+                                type="button"
+                                className="cart-dialog-cancel"
+                                onClick={() => setItemToRemove(null)}
+                            >
+                                Manter produto
                             </button>
-                            <button className="cart-btn cart-btn-primary" onClick={confirmRemove}>
+
+                            <button
+                                type="button"
+                                className="cart-dialog-confirm"
+                                onClick={confirmRemove}
+                            >
                                 Remover
                             </button>
                         </div>
@@ -487,22 +696,61 @@ function Carrinho() {
             )}
 
             {showClearModal && (
-                <div className="modal-overlay" onClick={() => setShowClearModal(false)}>
-                    <div className="modal-box modal-small" onClick={(e) => e.stopPropagation()}>
-                        <button className="modal-close-x" onClick={() => setShowClearModal(false)} aria-label="Fechar">
+                <div
+                    className="cart-dialog-overlay"
+                    onMouseDown={(event) => {
+                        if (event.target === event.currentTarget) {
+                            setShowClearModal(false);
+                        }
+                    }}
+                >
+                    <div
+                        className="cart-dialog"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="cart-clear-title"
+                    >
+                        <button
+                            type="button"
+                            className="cart-dialog-close"
+                            onClick={() => setShowClearModal(false)}
+                            aria-label="Fechar"
+                        >
                             <i className="bi bi-x-lg" aria-hidden="true" />
                         </button>
-                        <div className="modal-confirm">
-                            <i className="bi bi-exclamation-circle modal-confirm-icon" aria-hidden="true" />
-                            <h3 className="modal-title">Limpar carrinho?</h3>
-                            <p className="modal-text">Todos os itens serão removidos.</p>
+
+                        <div className="cart-dialog-icon">
+                            <i className="bi bi-bag-x" aria-hidden="true" />
                         </div>
-                        <div className="modal-actions">
-                            <button className="cart-btn cart-btn-ghost" onClick={() => setShowClearModal(false)}>
-                                Cancelar
+
+                        <span className="cart-section-eyebrow">
+                            Confirmar alteração
+                        </span>
+
+                        <h2 id="cart-clear-title">
+                            Esvaziar seu carrinho?
+                        </h2>
+
+                        <p>
+                            Todos os produtos selecionados serão removidos.
+                            Essa ação não pode ser desfeita.
+                        </p>
+
+                        <div className="cart-dialog-actions">
+                            <button
+                                type="button"
+                                className="cart-dialog-cancel"
+                                onClick={() => setShowClearModal(false)}
+                            >
+                                Manter produtos
                             </button>
-                            <button className="cart-btn cart-btn-primary" onClick={handleClearCart}>
-                                Limpar carrinho
+
+                            <button
+                                type="button"
+                                className="cart-dialog-confirm"
+                                onClick={handleClearCart}
+                            >
+                                Esvaziar carrinho
                             </button>
                         </div>
                     </div>

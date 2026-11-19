@@ -17,7 +17,7 @@ function Home() {
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [addedProductId, setAddedProductId] = useState(null);
-    const { addToCart, addMultipleToCart, showNotification } = useCart();
+    const { addToCart, addMultipleToCart } = useCart();
     const location = useLocation();
 
     useEffect(() => {
@@ -33,26 +33,9 @@ function Home() {
 
         window.scrollTo({
             top: Math.max(0, top),
-            behavior: 'smooth',
+            behavior: 'smooth'
         });
     }, [location.hash]);
-
-    useEffect(() => {
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === 'visible') {
-                const images = document.querySelectorAll('.product-image');
-                images.forEach(img => {
-                    const src = img.getAttribute('src');
-                    if (src) {
-                        img.src = src;
-                    }
-                });
-            }
-        };
-
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-    }, []);
 
     const openModal = (product) => {
         setSelectedProduct(product);
@@ -67,7 +50,10 @@ function Home() {
     const handleAddToCart = (product) => {
         addToCart(product);
         setAddedProductId(product.id);
-        setTimeout(() => setAddedProductId(null), 2000);
+
+        setTimeout(() => {
+            setAddedProductId(null);
+        }, 2000);
     };
 
     return (
@@ -77,40 +63,71 @@ function Home() {
             <Categories categories={categories} />
 
             <section className="promo-section" id="promocao">
-                <div className="promo-banner">
-                    <img
-                        src="/Floricultura-Dama-da-Noite/assets/Carrossel/astromelia.webp"
-                        alt="Promoção de Verão"
-                        className="promo-image"
-                    />
+                <div className="promo-section-inner">
+                    <div className="promo-heading">
+                        <span className="promo-heading-line" />
+                        <span>Uma ocasião especial</span>
+                    </div>
+
+                    <div className="promo-banner">
+                        <img
+                            src="/Floricultura-Dama-da-Noite/assets/Carrossel/astromelia.webp"
+                            alt="Presenteie com astromélias e aproveite 30% de desconto"
+                            className="promo-image"
+                        />
+                    </div>
+
+                    <div className="promo-bottom">
+                        <span>Flores para transformar pequenos momentos</span>
+                        <span className="promo-bottom-decoration">
+                            <i className="bi bi-flower1" aria-hidden="true" />
+                        </span>
+                    </div>
                 </div>
             </section>
 
-            <div id="lista-plantas">
+            <section className="home-catalog-section" id="lista-plantas">
                 <ProductList
                     products={products}
                     title="Acervo de plantas"
                     onAddToCart={handleAddToCart}
                     onOpenModal={openModal}
                     addedProductId={addedProductId}
-                    itemsPerPage={8}
+                    itemsPerPage={12}
                 />
-            </div>
+            </section>
 
-            <section className="products-section">
+            <section className="products-section" aria-labelledby="winter-collection-title">
+                <div className="products-section-intro">
+                    <div className="products-section-heading">
+                        <span className="products-section-index">01 / COLEÇÃO ESPECIAL</span>
+                        <h2 id="winter-collection-title">A beleza de cada estação</h2>
+                    </div>
+
+                    <p>
+                        Uma seleção especial de plantas para trazer vida,
+                        cor e aconchego aos seus espaços.
+                    </p>
+                </div>
+
                 <div className="products-banner">
                     <img
                         src="/Floricultura-Dama-da-Noite/assets/Carrossel/coleção-de-inverno.jpg"
-                        alt="Coleção de Inverno"
+                        alt="Coleção de inverno com orquídeas azuis"
                         className="promo-image"
                     />
+                </div>
+
+                <div className="products-collection-meta">
+                    <span>Seleção da estação</span>
+                    <span>{String(invernoProducts.length).padStart(2, '0')} espécies selecionadas</span>
                 </div>
 
                 <div className="products-grid" id="inverno-grid">
                     {invernoProducts.map((product) => (
                         <ProductCard
                             product={product}
-                            searchTerm={''}
+                            searchTerm=""
                             onAddToCart={handleAddToCart}
                             onOpenModal={openModal}
                             addedProductId={addedProductId}
@@ -121,6 +138,7 @@ function Home() {
             </section>
 
             <Testimonials testimonials={testimonials} />
+
             <Newsletter />
 
             <ProductModal

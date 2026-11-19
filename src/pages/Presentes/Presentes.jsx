@@ -8,6 +8,7 @@ import Categories from '../../components/Categories/Categories';
 import Footer from '../../components/Footer/Footer';
 import { presentesProducts } from '../../data/presentesData';
 import { categories } from '../../data/categories';
+import '../Home/Home.scss';
 
 const presentesSlides = [
     {
@@ -51,13 +52,16 @@ function Presentes() {
     const handleAddToCart = (product) => {
         addToCart(product);
         setAddedProductId(product.id);
-        setTimeout(() => setAddedProductId(null), 2000);
+
+        setTimeout(() => {
+            setAddedProductId(null);
+        }, 2000);
     };
 
     if (loading) {
         return (
             <div className="loading-overlay">
-                <i className="bi bi-flower1 loading-logo"></i>
+                <i className="bi bi-flower1 loading-logo" />
             </div>
         );
     }
@@ -65,17 +69,35 @@ function Presentes() {
     return (
         <div className="presentes-page">
             <HeroCarousel page="presentes" slides={presentesSlides} />
+
             <Categories categories={categories} />
 
             <section className="promo-section" id="promocao">
-                <div className="container">
+                <div className="promo-section-inner">
+                    <div className="promo-heading">
+                        <span className="promo-heading-line" />
+                        <span>Para quem faz parte da sua história</span>
+                    </div>
+
                     <div className="promo-banner">
-                        <img src="/Floricultura-Dama-da-Noite/assets/Carrossel/irmao.webp" alt="Promoção Especial" className="img-fluid promo-image" />
+                        <img
+                            src="/Floricultura-Dama-da-Noite/assets/Carrossel/irmao.webp"
+                            alt="Presentes especiais para o Dia do Irmão"
+                            className="promo-image"
+                        />
+                    </div>
+
+                    <div className="promo-bottom">
+                        <span>Gestos de carinho para celebrar quem você ama</span>
+
+                        <span className="promo-bottom-decoration">
+                            <i className="bi bi-gift" aria-hidden="true" />
+                        </span>
                     </div>
                 </div>
             </section>
 
-            <div className="container py-4">
+            <section className="home-catalog-section">
                 <ProductList
                     products={presentesProducts}
                     onAddToCart={handleAddToCart}
@@ -84,7 +106,7 @@ function Presentes() {
                     addedProductId={addedProductId}
                     itemsPerPage={8}
                 />
-            </div>
+            </section>
 
             <Newsletter />
 

@@ -1,6 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import ProductCard from '../ProductCard/ProductCard';
 import './ProductList.scss';
+
+const SORT_OPTIONS = [
+    { value: 'price-asc', label: 'Menor preço', icon: 'bi-sort-numeric-down' },
+    { value: 'price-desc', label: 'Maior preço', icon: 'bi-sort-numeric-down-alt' },
+    { value: 'name-asc', label: 'Nome (A–Z)', icon: 'bi-sort-alpha-down' },
+    { value: 'name-desc', label: 'Nome (Z–A)', icon: 'bi-sort-alpha-down-alt' },
+    { value: 'rating-desc', label: 'Melhor avaliação', icon: 'bi-star' }
+];
 
 function ProductList({
     products,
@@ -8,333 +16,461 @@ function ProductList({
     onAddToCart,
     onOpenModal,
     addedProductId,
-    itemsPerPage = 8
+    itemsPerPage = 12
 }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [sortType, setSortType] = useState('');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const sortRef = useRef(null);
+    const listRef = useRef(null);
+
+    const safeItemsPerPage = Math.max(1, itemsPerPage);
 
     useEffect(() => {
         if (!isDropdownOpen) return;
 
-        const handleClickOutside = (e) => {
-            if (sortRef.current && !sortRef.current.contains(e.target)) {
+        const handleClickOutside = (event) => {
+            if (sortRef.current && !sortRef.current.contains(event.target)) {
                 setIsDropdownOpen(false);
             }
         };
-        const handleKey = (e) => {
-            if (e.key === 'Escape') setIsDropdownOpen(false);
+
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape') {
+                setIsDropdownOpen(false);
+            }
         };
 
         document.addEventListener('mousedown', handleClickOutside);
-        document.addEventListener('keydown', handleKey);
+        document.addEventListener('keydown', handleKeyDown);
+
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
-            document.removeEventListener('keydown', handleKey);
+            document.removeEventListener('keydown', handleKeyDown);
         };
     }, [isDropdownOpen]);
 
-    const handleSearch = (term) => {
-        setSearchTerm(term);
+    const filteredProducts = useMemo(() => {
+        const term = searchTerm.trim().toLocaleLowerCase('pt-BR');
+
+        if (!term) return products;
+
+        return products.filter((product) => {
+            const searchableText = [
+                product.name,
+                product.description,
+                product.category
+            ]
+                .filter(Boolean)
+                .join(' ')
+                .toLocaleLowerCase('pt-BR');
+
+            return searchableText.includes(term);
+        });
+    }, [products, searchTerm]);
+
+    const sortedProducts = useMemo(() => {
+        const result = [...filteredProducts];
+
+        switch (sortType) {
+            case 'price-asc':
+                return result.sort((a, b) => a.price - b.price);
+
+            case 'price-desc':
+                return result.sort((a, b) => b.price - a.price);
+
+            case 'name-asc':
+                return result.sort((a, b) =>
+                    a.name.localeCompare(b.name, 'pt-BR')
+                );
+
+            case 'name-desc':
+                return result.sort((a, b) =>
+                    b.name.localeCompare(a.name, 'pt-BR')
+                );
+
+            case 'rating-desc':
+                return result.sort((a, b) =>
+                    (Number(b.rating) || 0) - (Number(a.rating) || 0)
+                );
+
+            default:
+                return result;
+        }
+    }, [filteredProducts, sortType]);
+
+    const totalProducts = sortedProducts.length;
+    const totalPages = Math.ceil(totalProducts / safeItemsPerPage);
+    const safeCurrentPage = Math.min(
+        currentPage,
+        Math.max(1, totalPages)
+    );
+
+    const startIndex = (safeCurrentPage - 1) * safeItemsPerPage;
+    const currentProducts = sortedProducts.slice(
+        startIndex,
+        startIndex + safeItemsPerPage
+    );
+
+    const firstItem = totalProducts > 0 ? startIndex + 1 : 0;
+    const lastItem = Math.min(
+        startIndex + safeItemsPerPage,
+        totalProducts
+    );
+
+    const activeSort = SORT_OPTIONS.find(
+        (option) => option.value === sortType
+    );
+
+    const hasActiveFilters = Boolean(searchTerm.trim() || sortType);
+
+    const handleSearch = (value) => {
+        setSearchTerm(value);
         setCurrentPage(1);
     };
 
-    const handleSort = (type) => {
-        setSortType(type);
+    const handleSort = (value) => {
+        setSortType(value);
         setCurrentPage(1);
         setIsDropdownOpen(false);
     };
 
-    const clearSearch = () => {
+    const clearFilters = () => {
         setSearchTerm('');
+        setSortType('');
         setCurrentPage(1);
+        setIsDropdownOpen(false);
     };
-
-    const getFilteredProducts = () => {
-        if (!searchTerm.trim()) {
-            return products;
-        }
-        const term = searchTerm.toLowerCase();
-        return products.filter((product) => {
-            const name = (product.name || '').toLowerCase();
-            const description = (product.description || '').toLowerCase();
-            const category = (product.category || '').toLowerCase();
-            return (
-                name.includes(term) ||
-                description.includes(term) ||
-                category.includes(term)
-            );
-        });
-    };
-
-    const getSortedProducts = (filtered) => {
-        if (!sortType) return filtered;
-        const sorted = [...filtered];
-        switch (sortType) {
-            case 'price-asc':
-                sorted.sort((a, b) => a.price - b.price);
-                break;
-            case 'price-desc':
-                sorted.sort((a, b) => b.price - a.price);
-                break;
-            case 'name-asc':
-                sorted.sort((a, b) => a.name.localeCompare(b.name));
-                break;
-            case 'name-desc':
-                sorted.sort((a, b) => b.name.localeCompare(a.name));
-                break;
-            default:
-                break;
-        }
-        return sorted;
-    };
-
-    const filtered = getFilteredProducts();
-    const sorted = getSortedProducts(filtered);
-
-    const totalPages = Math.ceil(sorted.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const currentProducts = sorted.slice(startIndex, startIndex + itemsPerPage);
 
     const goToPage = (page) => {
-        if (page >= 1 && page <= totalPages) {
-            setCurrentPage(page);
-            const productListElement = document.querySelector('.product-list');
-            if (productListElement) {
-                const offset = 80;
-                const top = productListElement.getBoundingClientRect().top + window.scrollY - offset;
-                window.scrollTo({ top, behavior: 'smooth' });
-            }
+        if (page < 1 || page > totalPages || page === safeCurrentPage) {
+            return;
+        }
+
+        setCurrentPage(page);
+
+        if (listRef.current) {
+            const offset = 100;
+            const top =
+                listRef.current.getBoundingClientRect().top +
+                window.scrollY -
+                offset;
+
+            window.scrollTo({
+                top: Math.max(0, top),
+                behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+                    ? 'auto'
+                    : 'smooth'
+            });
         }
     };
 
-    const sortLabel = sortType === 'price-asc' ? 'Menor preço'
-        : sortType === 'price-desc' ? 'Maior preço'
-        : sortType === 'name-asc' ? 'Nome (A-Z)'
-        : sortType === 'name-desc' ? 'Nome (Z-A)'
-        : 'Ordenar';
-
-    const renderPagination = () => {
-        if (totalPages <= 1) return null;
-
+    const getVisiblePages = () => {
         const maxVisiblePages = 5;
-        let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+        const visibleCount = Math.min(maxVisiblePages, totalPages);
 
-        if (endPage - startPage + 1 < maxVisiblePages) {
-            startPage = Math.max(1, endPage - maxVisiblePages + 1);
-        }
+        let startPage = Math.max(
+            1,
+            safeCurrentPage - Math.floor(visibleCount / 2)
+        );
 
-        const pages = [];
-        for (let i = startPage; i <= endPage; i++) pages.push(i);
+        let endPage = Math.min(
+            totalPages,
+            startPage + visibleCount - 1
+        );
 
-        return (
-            <div className="pagination-container">
-                <button
-                    className={`page-btn ${currentPage === 1 ? 'is-disabled' : ''}`}
-                    onClick={() => goToPage(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    aria-label="Página anterior"
-                >
-                    <i className="bi bi-chevron-left" aria-hidden="true" />
-                </button>
+        startPage = Math.max(
+            1,
+            endPage - visibleCount + 1
+        );
 
-                {startPage > 1 && (
-                    <>
-                        <button className="page-btn" onClick={() => goToPage(1)}>1</button>
-                        {startPage > 2 && (
-                            <span className="page-dots">
-                                <i className="bi bi-three-dots" aria-hidden="true" />
-                            </span>
-                        )}
-                    </>
-                )}
-
-                {pages.map(page => (
-                    <button
-                        key={page}
-                        className={`page-btn ${currentPage === page ? 'is-active' : ''}`}
-                        onClick={() => goToPage(page)}
-                    >
-                        {page}
-                    </button>
-                ))}
-
-                {endPage < totalPages && (
-                    <>
-                        {endPage < totalPages - 1 && (
-                            <span className="page-dots">
-                                <i className="bi bi-three-dots" aria-hidden="true" />
-                            </span>
-                        )}
-                        <button className="page-btn" onClick={() => goToPage(totalPages)}>{totalPages}</button>
-                    </>
-                )}
-
-                <button
-                    className={`page-btn ${currentPage === totalPages ? 'is-disabled' : ''}`}
-                    onClick={() => goToPage(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    aria-label="Próxima página"
-                >
-                    <i className="bi bi-chevron-right" aria-hidden="true" />
-                </button>
-            </div>
+        return Array.from(
+            { length: endPage - startPage + 1 },
+            (_, index) => startPage + index
         );
     };
 
-    return (
-        <div className="product-list" id="product-grid">
-            <div className="product-list-header">
-                <p className="product-list-eyebrow">
-                    <span className="product-list-eyebrow-line" />
-                    Acervo
-                </p>
-                <h2 className="product-list-title">{title}</h2>
-            </div>
+    const visiblePages = getVisiblePages();
 
-            <div className="product-list-controls">
+    return (
+        <section className="product-list" id="product-grid" ref={listRef}>
+            <header className="product-list-header">
+                <div className="product-list-heading">
+                    <div className="product-list-eyebrow">
+                        <span className="product-list-eyebrow-line" />
+                        <span>Nosso acervo</span>
+                    </div>
+
+                    <h2 className="product-list-title">{title}</h2>
+
+                    <p className="product-list-description">
+                        Explore nossa seleção e encontre algo especial para você.
+                    </p>
+                </div>
+
+                <div className="product-list-summary">
+                    <span className="product-list-summary-number">
+                        {String(products.length).padStart(2, '0')}
+                    </span>
+
+                    <span className="product-list-summary-label">
+                        {products.length === 1 ? 'Produto' : 'Produtos'}
+                        <span>no acervo</span>
+                    </span>
+                </div>
+            </header>
+
+            <div className="product-list-toolbar">
                 <div className="product-list-search">
-                    <div className="search-pill">
-                        <i className="bi bi-search search-pill-icon" aria-hidden="true" />
-                        <input
-                            type="text"
-                            className="search-pill-input"
-                            placeholder="Buscar produtos..."
-                            value={searchTerm}
-                            onChange={(e) => handleSearch(e.target.value)}
-                            aria-label="Buscar produtos"
-                        />
-                        {searchTerm && (
-                            <button
-                                type="button"
-                                className="search-pill-clear"
-                                onClick={clearSearch}
-                                aria-label="Limpar busca"
-                            >
-                                <i className="bi bi-x-lg" aria-hidden="true" />
-                            </button>
+                    <i
+                        className="bi bi-search product-list-search-icon"
+                        aria-hidden="true"
+                    />
+
+                    <input
+                        type="search"
+                        value={searchTerm}
+                        onChange={(event) => handleSearch(event.target.value)}
+                        placeholder="O que você está procurando?"
+                        aria-label="Buscar produtos"
+                        className="product-list-search-input"
+                    />
+
+                    {searchTerm && (
+                        <button
+                            type="button"
+                            className="product-list-search-clear"
+                            onClick={() => handleSearch('')}
+                            aria-label="Limpar busca"
+                        >
+                            <i className="bi bi-x-lg" aria-hidden="true" />
+                        </button>
+                    )}
+                </div>
+
+                <div className="product-list-toolbar-actions">
+                    <div className="product-list-sort" ref={sortRef}>
+                        <button
+                            type="button"
+                            className={`product-list-sort-trigger ${sortType ? 'is-active' : ''}`}
+                            onClick={() => setIsDropdownOpen((value) => !value)}
+                            aria-expanded={isDropdownOpen}
+                            aria-haspopup="true"
+                        >
+                            <i className="bi bi-sliders2" aria-hidden="true" />
+
+                            <span>
+                                {activeSort ? activeSort.label : 'Ordenar por'}
+                            </span>
+
+                            <i
+                                className={`bi bi-chevron-down product-list-sort-chevron ${isDropdownOpen ? 'is-open' : ''}`}
+                                aria-hidden="true"
+                            />
+                        </button>
+
+                        {isDropdownOpen && (
+                            <div className="product-list-sort-menu">
+                                <span className="product-list-sort-heading">
+                                    Organizar produtos
+                                </span>
+
+                                {SORT_OPTIONS.map((option) => (
+                                    <button
+                                        key={option.value}
+                                        type="button"
+                                        className={`product-list-sort-option ${sortType === option.value ? 'is-active' : ''}`}
+                                        onClick={() => handleSort(option.value)}
+                                    >
+                                        <i
+                                            className={`bi ${option.icon}`}
+                                            aria-hidden="true"
+                                        />
+
+                                        <span>{option.label}</span>
+
+                                        {sortType === option.value && (
+                                            <i
+                                                className="bi bi-check2 product-list-sort-check"
+                                                aria-hidden="true"
+                                            />
+                                        )}
+                                    </button>
+                                ))}
+
+                                {sortType && (
+                                    <button
+                                        type="button"
+                                        className="product-list-sort-reset"
+                                        onClick={() => handleSort('')}
+                                    >
+                                        Limpar ordenação
+                                    </button>
+                                )}
+                            </div>
                         )}
                     </div>
                 </div>
-
-                <div className="product-list-sort" ref={sortRef}>
-                    <button
-                        type="button"
-                        className={`sort-btn ${sortType ? 'is-active' : ''}`}
-                        onClick={() => setIsDropdownOpen(v => !v)}
-                        aria-expanded={isDropdownOpen}
-                        aria-haspopup="listbox"
-                    >
-                        <i className="bi bi-funnel sort-btn-icon" aria-hidden="true" />
-                        <span className="sort-btn-label">{sortLabel}</span>
-                        <i
-                            className={`bi bi-chevron-down sort-btn-caret ${isDropdownOpen ? 'is-open' : ''}`}
-                            aria-hidden="true"
-                        />
-                    </button>
-
-                    {isDropdownOpen && (
-                        <ul className="sort-menu" role="listbox">
-                            <li>
-                                <button
-                                    type="button"
-                                    className={`sort-item ${sortType === 'price-asc' ? 'is-active' : ''}`}
-                                    onClick={() => handleSort('price-asc')}
-                                >
-                                    Menor preço
-                                </button>
-                            </li>
-                            <li>
-                                <button
-                                    type="button"
-                                    className={`sort-item ${sortType === 'price-desc' ? 'is-active' : ''}`}
-                                    onClick={() => handleSort('price-desc')}
-                                >
-                                    Maior preço
-                                </button>
-                            </li>
-                            <li className="sort-divider" role="separator" />
-                            <li>
-                                <button
-                                    type="button"
-                                    className={`sort-item ${sortType === 'name-asc' ? 'is-active' : ''}`}
-                                    onClick={() => handleSort('name-asc')}
-                                >
-                                    Nome (A-Z)
-                                </button>
-                            </li>
-                            <li>
-                                <button
-                                    type="button"
-                                    className={`sort-item ${sortType === 'name-desc' ? 'is-active' : ''}`}
-                                    onClick={() => handleSort('name-desc')}
-                                >
-                                    Nome (Z-A)
-                                </button>
-                            </li>
-                            {sortType && (
-                                <>
-                                    <li className="sort-divider" role="separator" />
-                                    <li>
-                                        <button
-                                            type="button"
-                                            className="sort-item sort-item-danger"
-                                            onClick={() => handleSort('')}
-                                        >
-                                            Limpar ordenação
-                                        </button>
-                                    </li>
-                                </>
-                            )}
-                        </ul>
-                    )}
-                </div>
             </div>
 
-            <div className="product-grid">
-                {currentProducts.length === 0 ? (
-                    <div className="product-grid-empty">
-                        <div className="empty-state">
-                            <i className="bi bi-emoji-frown empty-state-icon" aria-hidden="true" />
-                            <h3 className="empty-state-title">Nenhum produto encontrado</h3>
-                            <p className="empty-state-text">
-                                Não encontramos produtos correspondentes à sua busca.
-                            </p>
-                            <button
-                                type="button"
-                                className="empty-state-btn"
-                                onClick={clearSearch}
-                            >
-                                Ver todos os produtos
-                            </button>
+            <div className="product-list-results">
+                <div className="product-list-results-info" aria-live="polite">
+                    <span className="product-list-results-line" />
+
+                    <span>
+                        {totalProducts === 0
+                            ? 'Nenhum produto encontrado'
+                            : `${totalProducts} ${totalProducts === 1 ? 'produto encontrado' : 'produtos encontrados'}`}
+                    </span>
+                </div>
+
+                {hasActiveFilters && (
+                    <button
+                        type="button"
+                        className="product-list-clear-filters"
+                        onClick={clearFilters}
+                    >
+                        <i className="bi bi-x-circle" aria-hidden="true" />
+                        Limpar filtros
+                    </button>
+                )}
+            </div>
+
+            {currentProducts.length === 0 ? (
+                <div className="product-grid-empty">
+                    <div className="empty-state">
+                        <div className="empty-state-icon">
+                            <i className="bi bi-search" aria-hidden="true" />
                         </div>
+
+                        <span className="empty-state-eyebrow">
+                            Nenhum resultado
+                        </span>
+
+                        <h3 className="empty-state-title">
+                            Não encontramos o que você procura
+                        </h3>
+
+                        <p className="empty-state-text">
+                            Experimente buscar por outro nome ou explore
+                            todos os produtos disponíveis.
+                        </p>
+
+                        <button
+                            type="button"
+                            className="empty-state-btn"
+                            onClick={clearFilters}
+                        >
+                            Ver todos os produtos
+                            <i className="bi bi-arrow-right" aria-hidden="true" />
+                        </button>
                     </div>
-                ) : (
-                    currentProducts.map((product) => (
+                </div>
+            ) : (
+                <div className="product-grid">
+                    {currentProducts.map((product) => (
                         <ProductCard
+                            key={product.id}
                             product={product}
                             searchTerm={searchTerm}
                             onAddToCart={onAddToCart}
                             onOpenModal={onOpenModal}
                             addedProductId={addedProductId}
-                            key={product.id}
                         />
-                    ))
-                )}
-            </div>
-
-            {sorted.length > 0 && (
-                <div className="product-list-footer">
-                    {renderPagination()}
-                    <p className="product-list-count">
-                        Mostrando <strong>{startIndex + 1}</strong>-<strong>{Math.min(startIndex + itemsPerPage, sorted.length)}</strong> de <strong>{sorted.length}</strong> produtos
-                    </p>
+                    ))}
                 </div>
             )}
-        </div>
+
+            {totalProducts > 0 && (
+                <footer className="product-list-footer">
+                    <div className="product-list-footer-info">
+                        <span className="product-list-footer-eyebrow">
+                            Explorando o acervo
+                        </span>
+
+                        <p>
+                            Exibindo <strong>{firstItem}–{lastItem}</strong> de{' '}
+                            <strong>{totalProducts}</strong> produtos
+                        </p>
+                    </div>
+
+                    {totalPages > 1 && (
+                        <nav
+                            className="pagination-container"
+                            aria-label="Paginação de produtos"
+                        >
+                            <button
+                                type="button"
+                                className="page-btn page-btn-arrow"
+                                onClick={() => goToPage(safeCurrentPage - 1)}
+                                disabled={safeCurrentPage === 1}
+                                aria-label="Página anterior"
+                            >
+                                <i className="bi bi-arrow-left" aria-hidden="true" />
+                            </button>
+
+                            {visiblePages[0] > 1 && (
+                                <>
+                                    <button
+                                        type="button"
+                                        className="page-btn"
+                                        onClick={() => goToPage(1)}
+                                        aria-label="Ir para página 1"
+                                    >
+                                        1
+                                    </button>
+
+                                    {visiblePages[0] > 2 && (
+                                        <span className="page-dots">…</span>
+                                    )}
+                                </>
+                            )}
+
+                            {visiblePages.map((page) => (
+                                <button
+                                    key={page}
+                                    type="button"
+                                    className={`page-btn ${safeCurrentPage === page ? 'is-active' : ''}`}
+                                    onClick={() => goToPage(page)}
+                                    aria-label={`Ir para página ${page}`}
+                                    aria-current={safeCurrentPage === page ? 'page' : undefined}
+                                >
+                                    {page}
+                                </button>
+                            ))}
+
+                            {visiblePages[visiblePages.length - 1] < totalPages && (
+                                <>
+                                    {visiblePages[visiblePages.length - 1] < totalPages - 1 && (
+                                        <span className="page-dots">…</span>
+                                    )}
+
+                                    <button
+                                        type="button"
+                                        className="page-btn"
+                                        onClick={() => goToPage(totalPages)}
+                                        aria-label={`Ir para página ${totalPages}`}
+                                    >
+                                        {totalPages}
+                                    </button>
+                                </>
+                            )}
+
+                            <button
+                                type="button"
+                                className="page-btn page-btn-arrow"
+                                onClick={() => goToPage(safeCurrentPage + 1)}
+                                disabled={safeCurrentPage === totalPages}
+                                aria-label="Próxima página"
+                            >
+                                <i className="bi bi-arrow-right" aria-hidden="true" />
+                            </button>
+                        </nav>
+                    )}
+                </footer>
+            )}
+        </section>
     );
 }
 

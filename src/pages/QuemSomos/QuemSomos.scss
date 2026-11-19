@@ -1,3 +1,4 @@
+
 @use '../../styles/variables' as *;
 
 .loading-overlay {
@@ -8,8 +9,8 @@
 }
 
 .loading-logo {
-    font-size: 3rem;
     color: $terracotta;
+    font-size: 3rem;
     animation: loading-pulse 1.4s $ease-lux infinite;
 }
 
@@ -18,6 +19,7 @@
         opacity: 0.4;
         transform: scale(0.95);
     }
+
     50% {
         opacity: 1;
         transform: scale(1.05);
@@ -25,364 +27,631 @@
 }
 
 .quem-somos-page {
+    min-height: 100vh;
     background: $light-bg;
 }
 
-.qs-eyebrow {
+.quem-somos-page .qs-eyebrow {
     display: inline-flex;
     align-items: center;
     gap: 0.85rem;
-    margin: 0 0 1.25rem;
+    margin: 0 0 1.3rem;
     color: $terracotta;
     font-family: $body;
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 600;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.17em;
+    line-height: 1.5;
     text-transform: uppercase;
 }
 
-.qs-eyebrow-line {
+.quem-somos-page .qs-eyebrow-line {
     display: block;
-    width: 2.25rem;
+    flex-shrink: 0;
+    width: 2.4rem;
     height: 1px;
-    background: $terracotta;
+    background: currentColor;
 }
 
-.qs-hand {
+.quem-somos-page .qs-hand {
     color: $terracotta;
     font-family: $script;
+    font-size: 1.08em;
     font-style: normal;
     font-weight: 700;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
 }
 
-.qs-hero {
-    padding: clamp(6rem, 10vw, 9rem) clamp(1.5rem, 5vw, 5rem);
+.quem-somos-page .qs-section-title {
+    margin: 0;
+    color: $dark-text;
+    font-family: $display;
+    font-size: clamp(2.4rem, 4.5vw, 4rem);
+    font-weight: 400;
+    letter-spacing: -0.025em;
+    line-height: 1.12;
+}
+
+.quem-somos-page .qs-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: clamp(350px, 38vw, 500px);
+    padding: 5rem 1.5rem 6rem;
+    overflow: hidden;
     background:
-        linear-gradient(rgba(56, 45, 39, 0.55), rgba(56, 45, 39, 0.65)),
+        linear-gradient(
+            90deg,
+            rgba(43, 35, 31, 0.7),
+            rgba(43, 35, 31, 0.46)
+        ),
         url('/Floricultura-Dama-da-Noite/assets/Logo/Quem_Somos.png') center / cover no-repeat;
     color: $light-text;
     text-align: center;
-
-    .qs-eyebrow {
-        color: $accent-color;
-
-        .qs-eyebrow-line {
-            background: $accent-color;
-        }
-    }
 }
 
-.qs-hero-title {
+.quem-somos-page .qs-hero-content {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 850px;
     margin: 0 auto;
+}
+
+.quem-somos-page .qs-eyebrow-light {
+    color: #ead0bd;
+}
+
+.quem-somos-page .qs-hero-title {
     max-width: 900px;
+    margin: 0 auto;
+    color: #fff;
     font-family: $display;
-    font-size: clamp(2.8rem, 7vw, 6rem);
+    font-size: clamp(3.2rem, 7vw, 6rem);
     font-weight: 400;
-    letter-spacing: 0.005em;
-    line-height: 1.02;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
 
     .qs-hand {
-        color: $accent-color;
+        color: #e8bea5;
     }
 }
 
-.qs-hero-text {
-    max-width: 560px;
-    margin: clamp(1.75rem, 3vw, 2.5rem) auto 0;
-    color: rgba(253, 249, 244, 0.9);
+.quem-somos-page .qs-hero-text {
+    max-width: 570px;
+    margin: 1.5rem auto 0;
+    color: rgba(255, 255, 255, 0.88);
     font-family: $body;
-    font-size: 1rem;
-    font-weight: 400;
+    font-size: 0.95rem;
     line-height: 1.85;
 }
 
-.qs-block {
-    padding: clamp(4rem, 7vw, 6rem) clamp(1.5rem, 5vw, 5rem);
+.quem-somos-page .qs-hero-bottom {
+    position: absolute;
+    right: clamp(1.5rem, 5vw, 5rem);
+    bottom: 1.5rem;
+    left: clamp(1.5rem, 5vw, 5rem);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+
+    span {
+        color: rgba(255, 255, 255, 0.8);
+        font-family: $body;
+        font-size: 0.63rem;
+        font-weight: 500;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+    }
+
+    i {
+        color: #e8bea5;
+        font-size: 1.1rem;
+    }
+}
+
+.quem-somos-page .qs-intro-section {
+    padding: clamp(5rem, 8vw, 8rem) clamp(1rem, 4vw, 4rem) 2rem;
     background: $light-bg;
 }
 
-.qs-block-reverse {
-    position: relative;
-    margin-top: clamp(-3rem, -4vw, -2rem);
-    padding-top: clamp(5rem, 8vw, 7rem);
-    background: $cream;
-    border-radius: 40% 40% 0 0 / 90px 90px 0 0;
-    z-index: 2;
-}
-
-.qs-block-inner {
+.quem-somos-page .qs-intro-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    align-items: start;
+    gap: clamp(3rem, 7vw, 8rem);
+    width: 100%;
     max-width: 1400px;
     margin: 0 auto;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    align-items: center;
-    gap: clamp(2.5rem, 6vw, 6rem);
 }
 
-.qs-block-inner-single {
-    grid-template-columns: 1fr;
-    max-width: 780px;
+.quem-somos-page .qs-intro-heading {
+    max-width: 490px;
 }
 
-.qs-block-text {
-    max-width: 100%;
+.quem-somos-page .qs-intro-content {
+    max-width: 680px;
+    padding-top: 0.5rem;
 
     p {
-        margin: 0 0 1.25rem;
+        margin: 0 0 1.5rem;
         color: $gray-text;
         font-family: $body;
-        font-size: 0.98rem;
-        line-height: 1.85;
+        font-size: 0.92rem;
+        line-height: 1.9;
     }
 
-    p:last-of-type {
-        margin-bottom: 0;
+    .qs-intro-lead {
+        margin-bottom: 1.75rem;
+        color: $dark-text;
+        font-family: $display;
+        font-size: clamp(1.5rem, 2.6vw, 2.15rem);
+        font-weight: 400;
+        line-height: 1.45;
     }
 }
 
-.qs-block-title {
-    margin: 0 0 1.75rem;
-    color: $dark-text;
-    font-family: $display;
-    font-size: clamp(2.2rem, 4.5vw, 3.8rem);
-    font-weight: 400;
-    letter-spacing: 0.005em;
-    line-height: 1.05;
-}
-
-.qs-cta {
+.quem-somos-page .qs-cta {
     display: inline-flex;
     align-items: center;
-    gap: 1rem;
-    margin-top: clamp(1.75rem, 3vw, 2.5rem);
-    color: $dark-text;
+    justify-content: space-between;
+    gap: 2rem;
+    min-width: 185px;
+    margin-top: 0.5rem;
+    padding: 0.9rem 1.1rem;
+    border: 1px solid $primary-color;
+    border-radius: $radius-sm;
+    background: $primary-color;
+    color: $light-text;
     font-family: $body;
     font-size: 0.78rem;
     font-weight: 600;
-    letter-spacing: 0.14em;
     text-decoration: none;
-    text-transform: uppercase;
-    transition: color $transition;
+    transition: background $transition, border-color $transition;
+
+    i {
+        font-size: 1rem;
+    }
 
     &:hover {
-        color: $terracotta;
-
-        .qs-cta-icon {
-            background: $terracotta;
-            transform: rotate(-45deg);
-        }
-
-        .qs-cta-label::after {
-            transform: scaleX(1);
-            transform-origin: left;
-        }
+        border-color: $primary-dark;
+        background: $primary-dark;
+        color: $light-text;
     }
 
     &:focus-visible {
-        outline: 2px solid $primary-color;
-        outline-offset: 6px;
-        border-radius: 4px;
+        outline: 2px solid $terracotta;
+        outline-offset: 3px;
     }
 }
 
-.qs-cta-icon {
-    display: grid;
-    width: 46px;
-    height: 46px;
-    place-items: center;
-    border-radius: 50%;
-    background: $primary-color;
-    color: $light-text;
-    font-size: 1rem;
-    transition: background $transition, transform $transition;
-}
-
-.qs-cta-label {
-    position: relative;
-    padding-bottom: 4px;
-
-    &::after {
-        content: '';
-        position: absolute;
-        left: 0;
-        bottom: 0;
-        width: 100%;
-        height: 1px;
-        background: currentColor;
-        transform: scaleX(0);
-        transform-origin: right;
-        transition: transform 0.5s $ease-lux;
-    }
-}
-
-.qs-address {
+.quem-somos-page .qs-intro-footer {
     display: flex;
-    gap: 1rem;
-    margin-top: clamp(1.5rem, 2.5vw, 2rem);
-    padding: 1.25rem 1.5rem;
-    border: 1px solid $overlay-dark-soft;
-    border-radius: $radius-md;
-    background: $light-bg;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 1400px;
+    margin: clamp(4rem, 7vw, 6rem) auto 0;
+    padding-top: 1.5rem;
+    border-top: 1px solid $overlay-dark-soft;
+
+    span:not(.qs-intro-footer-line) {
+        color: $gray-text;
+        font-family: $body;
+        font-size: 0.64rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
 
     i {
-        font-size: 1.4rem;
         color: $terracotta;
-        line-height: 1.4;
+        font-size: 1rem;
     }
 }
 
-.qs-address-line {
-    margin: 0;
-    color: $gray-text;
-    font-family: $body;
-    font-size: 0.88rem;
-    line-height: 1.7;
-
-    &:first-child {
-        color: $dark-text;
-        font-weight: 600;
-    }
+.quem-somos-page .qs-intro-footer-line {
+    flex: 1;
+    height: 1px;
+    background: $overlay-dark-soft;
 }
 
-.qs-timeline-section {
-    padding: clamp(4rem, 7vw, 6rem) clamp(1.5rem, 5vw, 5rem);
+.quem-somos-page .qs-location-section {
+    padding: clamp(5rem, 8vw, 8rem) clamp(1rem, 4vw, 4rem);
+    background: $cream;
 }
 
-.qs-timeline-inner {
-    max-width: 900px;
+.quem-somos-page .qs-location-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(3rem, 7vw, 8rem);
+    width: 100%;
+    max-width: 1400px;
     margin: 0 auto;
 }
 
-.qs-timeline {
-    position: relative;
-    margin: clamp(2.5rem, 5vw, 4rem) 0 0;
-    padding: 0;
-    list-style: none;
-
-    &::before {
-        content: '';
-        position: absolute;
-        left: 6.5rem;
-        top: 0.5rem;
-        bottom: 0.5rem;
-        width: 1px;
-        background: $overlay-dark;
-    }
+.quem-somos-page .qs-location-heading {
+    max-width: 550px;
 }
 
-.qs-timeline-item {
-    position: relative;
-    display: grid;
-    grid-template-columns: 5.5rem 1fr;
-    align-items: start;
-    gap: clamp(1.5rem, 3vw, 2.5rem);
-    padding: 1.5rem 0;
-
-    &::before {
-        content: '';
-        position: absolute;
-        left: 6.5rem;
-        top: 2.1rem;
-        width: 9px;
-        height: 9px;
-        border-radius: 50%;
-        background: $terracotta;
-        transform: translateX(-50%);
-        border: 2px solid $sand;
-    }
-}
-
-.qs-timeline-year {
-    font-family: $display;
-    font-size: clamp(1.5rem, 2.5vw, 2rem);
-    font-weight: 400;
-    color: $terracotta;
-    letter-spacing: -0.02em;
-    line-height: 1.2;
-    text-align: right;
-}
-
-.qs-timeline-body {
-    padding-left: clamp(1rem, 3vw, 2rem);
-}
-
-.qs-timeline-title {
-    margin: 0 0 0.5rem;
-    color: $dark-text;
-    font-family: $display;
-    font-size: clamp(1.25rem, 2vw, 1.6rem);
-    font-weight: 400;
-    letter-spacing: 0.005em;
-    line-height: 1.25;
-}
-
-.qs-timeline-body p {
-    margin: 0;
+.quem-somos-page .qs-location-description {
+    max-width: 480px;
+    margin: 1.5rem 0 0;
     color: $gray-text;
     font-family: $body;
     font-size: 0.92rem;
-    line-height: 1.75;
+    line-height: 1.85;
 }
 
-@media (max-width: 900px) {
-    .qs-block-inner {
-        grid-template-columns: 1fr;
-        gap: clamp(2rem, 5vw, 3rem);
+.quem-somos-page .qs-location-panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 365px;
+    padding: clamp(1.5rem, 3vw, 2.5rem);
+    border: 1px solid rgba(184, 107, 71, 0.3);
+    border-radius: $radius-md;
+    background: $light-bg;
+}
+
+.quem-somos-page .qs-location-panel-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid $overlay-dark-soft;
+
+    span {
+        color: $terracotta;
+        font-family: $body;
+        font-size: 0.67rem;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
     }
 
-    .qs-block-inner-single {
+    i {
+        color: $terracotta;
+        font-size: 1.35rem;
+    }
+}
+
+.quem-somos-page .qs-location-panel-content {
+    flex: 1;
+    padding: 2rem 0;
+}
+
+.quem-somos-page .qs-location-label {
+    color: $gray-text;
+    font-family: $body;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+}
+
+.quem-somos-page .qs-location-panel-content h3 {
+    margin: 0.75rem 0 1.25rem;
+    color: $dark-text;
+    font-family: $display;
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    font-weight: 400;
+    line-height: 1.15;
+}
+
+.quem-somos-page .qs-location-address {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    color: $dark-text;
+    font-family: $body;
+    font-size: 0.88rem;
+    font-style: normal;
+    line-height: 1.65;
+
+    span {
+        color: $gray-text;
+        font-size: 0.82rem;
+    }
+}
+
+.quem-somos-page .qs-location-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid $overlay-dark-soft;
+    color: $terracotta;
+    font-family: $body;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color $transition;
+
+    i {
+        font-size: 1rem;
+    }
+
+    &:hover {
+        color: $primary-dark;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $terracotta;
+        outline-offset: 3px;
+    }
+}
+
+.quem-somos-page .qs-timeline-section {
+    padding: clamp(5rem, 8vw, 8rem) clamp(1rem, 4vw, 4rem);
+    background: $light-bg;
+}
+
+.quem-somos-page .qs-timeline-inner {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.quem-somos-page .qs-timeline-header {
+    max-width: 780px;
+    margin-bottom: clamp(3rem, 5vw, 5rem);
+}
+
+.quem-somos-page .qs-timeline-description {
+    max-width: 520px;
+    margin: 1.5rem 0 0;
+    color: $gray-text;
+    font-family: $body;
+    font-size: 0.9rem;
+    line-height: 1.8;
+}
+
+.quem-somos-page .qs-timeline {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid $overlay-dark-soft;
+    list-style: none;
+}
+
+.quem-somos-page .qs-timeline-item {
+    display: grid;
+    grid-template-columns: 45px minmax(100px, 0.35fr) minmax(0, 1fr) 28px;
+    align-items: start;
+    gap: clamp(1rem, 3vw, 3rem);
+    padding: clamp(1.75rem, 3vw, 2.75rem) 0;
+    border-bottom: 1px solid $overlay-dark-soft;
+}
+
+.quem-somos-page .qs-timeline-index {
+    padding-top: 0.6rem;
+    color: $terracotta;
+    font-family: $body;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+.quem-somos-page .qs-timeline-year {
+    color: $terracotta;
+    font-family: $display;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 400;
+    letter-spacing: -0.035em;
+    line-height: 1.1;
+}
+
+.quem-somos-page .qs-timeline-body {
+    padding-top: 0.25rem;
+}
+
+.quem-somos-page .qs-timeline-title {
+    margin: 0 0 0.7rem;
+    color: $dark-text;
+    font-family: $display;
+    font-size: clamp(1.3rem, 2.2vw, 1.8rem);
+    font-weight: 400;
+    line-height: 1.25;
+}
+
+.quem-somos-page .qs-timeline-body p {
+    max-width: 630px;
+    margin: 0;
+    color: $gray-text;
+    font-family: $body;
+    font-size: 0.87rem;
+    line-height: 1.85;
+}
+
+.quem-somos-page .qs-timeline-arrow {
+    padding-top: 0.5rem;
+    color: $terracotta;
+    font-size: 1rem;
+}
+
+.quem-somos-page .qs-timeline-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.85rem;
+    margin-top: clamp(3rem, 5vw, 5rem);
+    color: $terracotta;
+
+    i {
+        font-size: 1.15rem;
+    }
+
+    span {
+        font-family: $script;
+        font-size: 1.5rem;
+        font-weight: 700;
+        line-height: 1.3;
+        text-align: center;
+    }
+}
+
+@media (max-width: 1000px) {
+    .quem-somos-page .qs-intro-inner,
+    .quem-somos-page .qs-location-inner {
+        gap: 3rem;
+    }
+
+    .quem-somos-page .qs-timeline-item {
+        grid-template-columns: 35px 120px minmax(0, 1fr);
+    }
+
+    .quem-somos-page .qs-timeline-arrow {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .quem-somos-page .qs-intro-inner,
+    .quem-somos-page .qs-location-inner {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 2.5rem;
+    }
+
+    .quem-somos-page .qs-intro-content,
+    .quem-somos-page .qs-location-heading {
         max-width: 100%;
+    }
+
+    .quem-somos-page .qs-intro-content {
+        padding-top: 0;
+    }
+
+    .quem-somos-page .qs-location-panel {
+        min-height: 0;
+    }
+
+    .quem-somos-page .qs-timeline-item {
+        grid-template-columns: 30px 105px minmax(0, 1fr);
+        gap: 1rem;
     }
 }
 
 @media (max-width: 600px) {
-    .qs-hero {
-       display: none;
-    }
-    .qs-block, .qs-timeline-section{
-        padding: 4rem 0.8rem;
-    }
-
-    .qs-block-reverse {
-        margin-top: -2rem;
-        padding-top: 4rem;
-        border-radius: 40% 40% 0 0 / 50px 50px 0 0;
+    .quem-somos-page .qs-hero {
+        min-height: 360px;
+        padding: 4rem 1.25rem 5rem;
+        background-position: center;
     }
 
-    .qs-timeline {
-        &::before {
-            left: 4rem;
+    .quem-somos-page .qs-hero-title {
+        font-size: clamp(3rem, 11vw, 4.5rem);
+    }
+
+    .quem-somos-page .qs-hero-text {
+        font-size: 0.85rem;
+    }
+
+    .quem-somos-page .qs-hero-bottom {
+        right: 1.25rem;
+        bottom: 1.2rem;
+        left: 1.25rem;
+
+        span {
+            font-size: 0.52rem;
+            letter-spacing: 0.05em;
         }
     }
 
-    .qs-timeline-item {
-        grid-template-columns: 4rem 1fr;
-        gap: 1rem;
+    .quem-somos-page .qs-intro-section,
+    .quem-somos-page .qs-location-section,
+    .quem-somos-page .qs-timeline-section {
+        padding: 4rem 0.85rem;
+    }
 
-        &::before {
-            left: 4rem;
-            top: 1.9rem;
+    .quem-somos-page .qs-section-title {
+        font-size: clamp(2.25rem, 9vw, 3.2rem);
+    }
+
+    .quem-somos-page .qs-intro-lead {
+        font-size: 1.5rem;
+    }
+
+    .quem-somos-page .qs-intro-footer {
+        gap: 0.75rem;
+        margin-top: 3rem;
+
+        span:not(.qs-intro-footer-line) {
+            font-size: 0.55rem;
+            letter-spacing: 0.04em;
         }
     }
 
-    .qs-timeline-year {
-        font-size: 1.3rem;
-        padding-right: 0.75rem;
+    .quem-somos-page .qs-location-panel {
+        padding: 1.5rem;
     }
 
-    .qs-timeline-body {
-        padding-left: 0.75rem;
+    .quem-somos-page .qs-timeline-item {
+        grid-template-columns: 25px minmax(0, 1fr);
+        gap: 0.5rem 0.75rem;
+        padding: 1.75rem 0;
+    }
+
+    .quem-somos-page .qs-timeline-index {
+        grid-column: 1;
+        grid-row: 1;
+        padding-top: 0.45rem;
+    }
+
+    .quem-somos-page .qs-timeline-year {
+        grid-column: 2;
+        grid-row: 1;
+        font-size: 2.5rem;
+    }
+
+    .quem-somos-page .qs-timeline-body {
+        grid-column: 2;
+        grid-row: 2;
+        padding-top: 0.5rem;
+    }
+
+    .quem-somos-page .qs-timeline-title {
+        font-size: 1.35rem;
+    }
+
+    .quem-somos-page .qs-timeline-body p {
+        font-size: 0.84rem;
+    }
+
+    .quem-somos-page .qs-timeline-footer span {
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 380px) {
+    .quem-somos-page .qs-hero-bottom span:last-child {
+        display: none;
+    }
+
+    .quem-somos-page .qs-location-panel {
+        padding: 1.25rem;
+    }
+
+    .quem-somos-page .qs-intro-footer span:not(.qs-intro-footer-line) {
+        font-size: 0.5rem;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .qs-cta,
-    .qs-cta-icon,
-    .qs-cta-label,
-    .qs-cta-label::after,
     .loading-logo {
-        transition: none;
         animation: none;
+    }
+
+    .quem-somos-page .qs-cta,
+    .quem-somos-page .qs-location-link {
+        transition: none;
     }
 }

@@ -1,131 +1,412 @@
 @use '../../styles/variables' as *;
 
-.promo-section {
-    padding: 7rem  0 0;
+.home-page {
+    width: 100%;
+    overflow: clip;
     background: $light-bg;
-
-    .promo-banner {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 0 clamp(1.5rem, 5vw, 0rem);
-        overflow: hidden;
-        border-radius: $radius-lg;
-    }
-
-    .promo-image {
-        display: block;
-        width: 100%;
-        height: auto;
-        border-radius: 8px;
-        object-fit: cover;
-        transition: transform 1.2s $ease-lux;
-    }
 }
 
-#lista-plantas {
-    border-radius: 40% 40% 0 0 / 90px 90px 0 0;
+.promo-section {
+    position: relative;
+    padding: clamp(5rem, 8vw, 8rem) 1.5rem clamp(3rem, 5vw, 5rem);
     background: $light-bg;
+}
+
+.promo-section-inner {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.promo-heading {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 1.5rem;
+    color: $terracotta;
+    font-family: $body;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+.promo-heading-line {
+    display: block;
+    width: 2.5rem;
+    height: 1px;
+    background: $terracotta;
+}
+
+.promo-banner {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    border: 1px solid $overlay-dark-soft;
+    border-radius: $radius-md;
+    background: $cream-soft;
+}
+
+.promo-image {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+}
+
+.promo-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1.25rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid $overlay-dark-soft;
+    color: $gray-text;
+    font-family: $body;
+    font-size: 0.76rem;
+    font-weight: 400;
+    letter-spacing: 0.035em;
+}
+
+.promo-bottom-decoration {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: $terracotta;
+    font-size: 1.1rem;
+}
+
+.home-catalog-section {
+    position: relative;
+    padding: 0 0 1rem;
+    background: $light-bg;
+}
+
+.home-catalog-section .product-list-header {
+    padding-top: 2.5rem;
+}
+
+.home-catalog-section .product-list-footer {
+    padding-bottom: clamp(3rem, 5vw, 5rem);
 }
 
 .products-section {
+    width: 100%;
     max-width: 1400px;
     margin: 0 auto;
-    padding: 0 1.5rem 0px;
+    padding: clamp(2rem, 4vw, 4rem) 1.5rem clamp(6rem, 6vw, 9rem);
+    background: $light-bg;
+        border-bottom: 1px solid rgba(56, 45, 39, 0.12);
+}
 
-    .products-banner {
-        margin: 0rem 0rem 5rem;
-        overflow: hidden;
-        border-radius: 8px;
-        transition: box-shadow $transition;
+.products-section-intro {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 3rem;
+    margin-bottom: clamp(2rem, 4vw, 3.5rem);
+}
+
+.products-section-heading {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    max-width: 760px;
+}
+
+.products-section-index {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.8rem;
+    color: $terracotta;
+    font-family: $body;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.17em;
+
+    &::before {
+        content: '';
+        display: block;
+        width: 2.5rem;
+        height: 1px;
+        background: $terracotta;
     }
+}
+
+.products-section-heading h2 {
+    margin: 0;
+    color: $dark-text;
+    font-family: $display;
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    font-weight: 400;
+    letter-spacing: 0.005em;
+    line-height: 1.05;
+}
+
+.products-section-intro > p {
+    max-width: 290px;
+    margin: 0 0 0.35rem;
+    color: $gray-text;
+    font-family: $body;
+    font-size: 0.9rem;
+    font-weight: 400;
+    line-height: 1.8;
+}
+
+.products-banner {
+    position: relative;
+    width: 100%;
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid $overlay-dark-soft;
+    border-radius: $radius-md;
+    background: $cream-soft;
 
     .promo-image {
         display: block;
         width: 100%;
         height: auto;
-        object-fit: cover;
-        transition: transform 1.2s $ease-lux;
+        object-fit: contain;
+    }
+}
 
+.products-collection-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 0 0 clamp(2rem, 3.5vw, 3rem);
+    padding: 1.3rem 0;
+    border-bottom: 1px solid $overlay-dark-soft;
+    color: $gray-text;
+    font-family: $body;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+
+    span:first-child {
+        color: $terracotta;
+    }
+}
+
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(1.1rem, 2vw, 2rem);
+}
+
+@media (max-width: 1200px) {
+    .promo-section {
+        padding-right: 1.5rem;
+        padding-left: 1.5rem;
     }
 
-    .products-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: clamp(1.1rem, 2vw, 2rem);
+    .products-section {
+        padding-right: 1.5rem;
+        padding-left: 1.5rem;
+    }
+
+    .products-section-intro {
+        gap: 2rem;
     }
 }
 
 @media (max-width: 1024px) {
+    .promo-section {
+        padding-top: 5rem;
+        padding-bottom: 3.5rem;
+    }
+
     .products-section {
-        .products-grid {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
+        padding-top: 2.5rem;
+        padding-bottom: 6rem;
+    }
+
+    .products-section-heading h2 {
+        font-size: clamp(2.5rem, 5vw, 3.75rem);
+    }
+
+    .products-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
 
 @media (max-width: 768px) {
     .promo-section {
-        padding: 0;
-
-        .promo-banner {
-            padding: 0 1rem;
-            border-radius: $radius-md;
-        }
-
-        .promo-image {
-            display: none;
-        }
+        display: none;
     }
 
-    #lista-plantas {
-        margin-top: -60px;
-        padding: 60px 1rem 2.75rem;
-        border-radius: 50% 50% 0 0 / 60px 60px 0 0;
+    .promo-heading {
+        margin-bottom: 1.15rem;
+        font-size: 0.65rem;
+    }
+
+    .promo-heading-line {
+        width: 1.75rem;
+    }
+
+    .promo-banner {
+        border-radius: $radius-sm;
+    }
+
+    .promo-bottom {
+        margin-top: 1rem;
+        padding-bottom: 1.1rem;
+        font-size: 0.72rem;
+    }
+
+    .home-catalog-section {
+        padding: 0 1rem;
+    }
+
+    .home-catalog-section .product-list-header {
+        padding-top: 2.5rem;
+    }
+
+    .home-catalog-section .product-list-footer {
+        padding-bottom: 3rem;
     }
 
     .products-section {
-        padding: 2.75rem 1rem;
+        padding: 2.5rem 1rem 5rem;
+    }
 
-        .products-banner {
-            margin-bottom: 1.75rem;
-            border-radius: $radius-md;
-        }
+    .products-section-intro {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
 
-        .promo-image {
-            display: none;
-        }
+    .products-section-heading {
+        gap: 0.85rem;
+    }
 
-        .products-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 1rem;
-        }
+    .products-section-heading h2 {
+        font-size: clamp(2.5rem, 7vw, 3.5rem);
+    }
+
+    .products-section-intro > p {
+        max-width: 520px;
+        margin: 0;
+        font-size: 0.85rem;
+        line-height: 1.7;
+    }
+
+    .products-banner {
+        display: none;
+    }
+
+    .products-collection-meta {
+        margin-bottom: 2rem;
+        padding: 1rem 0;
+        font-size: 0.66rem;
+    }
+
+    .products-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
     }
 }
 
 @media (max-width: 480px) {
-    #lista-plantas {
-        margin-top: -40px;
-        padding: 40px 0.75rem 2.25rem;
-        border-radius: 50% 50% 0 0 / 40px 40px 0 0;
+
+    .promo-heading {
+        gap: 0.65rem;
+        margin-bottom: 1rem;
+        font-size: 0.6rem;
+        letter-spacing: 0.13em;
+    }
+
+    .promo-heading-line {
+        width: 1.5rem;
+    }
+
+    .promo-banner {
+        border-radius: $radius-sm;
+    }
+
+    .promo-bottom {
+        gap: 0.75rem;
+        margin-top: 0.85rem;
+        padding-bottom: 1rem;
+        font-size: 0.68rem;
+        line-height: 1.5;
+    }
+
+    .promo-bottom-decoration {
+        font-size: 0.95rem;
+    }
+
+    .home-catalog-section {
+        padding: 0 0.75rem;
+    }
+
+    .home-catalog-section .product-list-header {
+        padding-top: 2rem;
+    }
+
+    .home-catalog-section .product-list-footer {
+        padding-bottom: 2.5rem;
     }
 
     .products-section {
-        padding: 0 0.75rem;
+        padding: 2rem 0.75rem 4rem;
+    }
 
-        .products-grid {
-            grid-template-columns: 1fr;
+    .products-section-intro {
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .products-section-heading {
+        gap: 0.75rem;
+    }
+
+    .products-section-index {
+        gap: 0.6rem;
+        font-size: 0.6rem;
+        letter-spacing: 0.12em;
+
+        &::before {
+            width: 1.5rem;
         }
+    }
+
+    .products-section-heading h2 {
+        font-size: clamp(2rem, 2vw, 2.75rem);
+        line-height: 1.1;
+    }
+
+    .products-section-intro > p {
+        font-size: 0.7rem;
+        line-height: 1.7;
+    }
+
+    .products-collection-meta {
+        align-items: flex-start;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        padding: 0.9rem 0;
+        font-size: 0.6rem;
+        letter-spacing: 0.07em;
+    }
+
+    .products-collection-meta span:last-child {
+        text-align: right;
+    }
+
+    .products-grid {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .promo-image,
-    .products-banner {
+    .promo-image {
         transition: none;
-    }
-
-    .promo-banner:hover .promo-image,
-    .products-banner:hover .promo-image {
-        transform: none;
     }
 }
